@@ -10,6 +10,10 @@ import '../utils/helpers.dart'; // Para la función getInitials
 
 // Importar las pantallas de los módulos
 import 'departamentos_screen.dart';
+import 'presupuesto/periodos_screen.dart';
+import 'solicitudes_compra/solicitudes_screen.dart';
+import 'ordenes_compra/ordenes_screen.dart';
+import 'activos/activos_screen.dart';
 //import 'empleados/empleados_screen.dart';
 
 // Convertimos HomeScreen a StatefulWidget para manejar la página seleccionada
@@ -38,8 +42,11 @@ class _HomeScreenState extends State<HomeScreen> {
   final Map<String, Widget> _pages = {
     'dashboard': const Center(child: Text('Dashboard (Contenido Principal)')),
     'departamentos': const DepartamentosScreen(),
+    'presupuestos': const PeriodosScreen(),
+    'solicitudes_compra': const SolicitudesScreen(),
+    'ordenes_compra': const OrdenesScreen(),
     //'empleados': const EmpleadosScreen(),
-    'activos_fijos': const Center(child: Text('Módulo de Activos Fijos')),
+    'activos_fijos': const ActivosScreen(),
     'mantenimientos': const Center(child: Text('Módulo de Mantenimientos')),
     // ... (Añadir otras pantallas de módulos aquí) ...
   };
@@ -135,6 +142,9 @@ class _HomeScreenState extends State<HomeScreen> {
     switch(key) {
       case 'dashboard': return 'Dashboard';
       case 'departamentos': return 'Departamentos';
+      case 'presupuestos': return 'Presupuestos';
+      case 'solicitudes_compra': return 'Solicitudes de Compra';
+      case 'ordenes_compra': return 'Órdenes de Compra';
       //case: 'empleados': return 'Empleados';
       case 'activos_fijos': return 'Activos Fijos';
       case 'mantenimientos': return 'Mantenimientos';
