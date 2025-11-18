@@ -1,0 +1,88 @@
+Claro, aquí tienes una propuesta detallada para rediseñar el módulo de Presupuestos y hacerlo mucho más potente y útil.
+
+### Título: Propuesta de Rediseño del Módulo de Presupuestos
+
+---
+
+**1. Problema con el Modelo Actual**
+
+El modelo actual es, como bien dices, más un "capital" o una bolsa de dinero por departamento y año. No permite:
+-   Dividir el presupuesto en categorías de gasto (ej: hardware, viajes, suministros).
+-   Controlar el gasto a lo largo del tiempo con fechas de inicio y fin.
+-   Ver en qué se ha gastado el dinero y cuánto queda disponible en cada categoría.
+
+**2. Nueva Arquitectura Propuesta**
+
+Propongo una estructura de tres niveles que refleja una gestión presupuestaria real:
+
+**Nivel 1: El Período Presupuestario (El "cuándo")**
+
+Crearíamos un nuevo modelo llamado `PeriodoPresupuestario`.
+*   **Propósito:** Define el marco de tiempo general del presupuesto.
+*   **Campos Principales:**
+    *   `nombre`: Un texto para identificarlo (ej: "Presupuesto Anual 2026", "Presupuesto Q3 2026").
+    *   `fecha_inicio` y `fecha_fin`: Las fechas que definen su duración.
+    *   `estado`: Para controlar su ciclo de vida ('Planificación', 'Activo', 'Cerrado').
+    *   `monto_total`: Un campo que se autocalcula sumando todas sus partidas.
+
+**Nivel 2: La Partida Presupuestaria (El "qué" y "cuánto")**
+
+Este es el corazón del nuevo sistema. Un nuevo modelo `PartidaPresupuestaria`.
+*   **Propósito:** Representa cada una de las líneas o cuentas específicas de tu presupuesto.
+*   **Campos Principales:**
+    *   `periodo`: Lo vincula al `PeriodoPresupuestario` al que pertenece.
+    *   `departamento`: El departamento responsable de esta partida.
+    *   `nombre`: El nombre de la cuenta (ej: "Adquisición de Equipos Informáticos", "Mantenimiento de Infraestructura", "Licencias de Software").
+    *   `codigo`: Un código contable opcional para la partida (ej: "501-01", "TI-HW-001").
+    *   `monto_asignado`: La cantidad de dinero asignada a esta partida específica.
+    *   `monto_gastado`: Un campo que se actualizará **automáticamente** cada vez que se complete una compra.
+    *   `monto_disponible`: No se guarda en la base de datos, se calcula en tiempo real (`asignado - gastado`) para que siempre esté actualizado.
+
+**Nivel 3: El Movimiento Presupuestario (El "historial")**
+
+Para una auditoría y seguimiento perfectos, crearíamos un modelo `MovimientoPresupuestario`.
+*   **Propósito:** Funciona como un libro de contabilidad. Cada gasto genera un registro aquí.
+*   **Campos Principales:**
+    *   `partida`: Lo vincula a la `PartidaPresupuestaria` que se afectó.
+    *   `monto`: El valor del gasto.
+    *   `fecha`: Cuándo se realizó el movimiento.
+    *   `tipo`: 'Gasto' (por una compra), 'Ajuste' (para correcciones manuales).
+    *   `referencia_externa`: Un enlace a qué generó el gasto (por ejemplo, el ID de la `OrdenCompra`).
+
+Con este modelo, el `monto_gastado` de una partida se convierte en la suma de todos sus movimientos, lo cual es extremadamente robusto.
+
+**3. Integración con el Flujo de Compras (La "magia")**
+
+Aquí es donde todo se conecta:
+
+1.  **Al Crear una Solicitud de Compra:** Modificaríamos el formulario de "Nueva Solicitud". Ahora, además de describir lo que necesita, el empleado deberá seleccionar **de qué `PartidaPresupuestaria` saldrán los fondos**. El sistema solo le mostrará las partidas activas que correspondan a su departamento.
+
+2.  **Al Recibir un Activo:** Cuando el Administrador haga clic en "Recibir" en una `Orden de Compra`, la lógica del backend hará lo siguiente de forma automática y segura (usando una transacción):
+    *   Busca la `PartidaPresupuestaria` que se asoció en la solicitud original.
+    *   Crea un registro en `MovimientoPresupuestario` con el `precio_final` de la orden.
+    *   Actualiza el campo `monto_gastado` en la `PartidaPresupuestaria` correspondiente.
+
+**4. Ventajas de este Nuevo Modelo**
+
+*   **Control Total:** Sabrás exactamente en qué se gasta cada boliviano.
+*   **Visibilidad en Tiempo Real:** Podrás ver cuánto presupuesto le queda a cada departamento en cada una de sus partidas.
+*   **Decisiones Informadas:** Antes de aprobar una solicitud, el Jefe podrá ver si hay fondos disponibles en la partida seleccionada.
+*   **Auditoría Completa:** Tendrás un historial detallado de cada gasto.
+*   **Flexibilidad:** Podrás gestionar presupuestos anuales, trimestrales o por proyecto sin problemas.
+
+**5. Próximos Pasos (Si apruebas la idea)**
+
+1.  **Backend:**
+    *   Eliminar el modelo `Presupuesto` actual.
+    *   Crear los nuevos modelos: `PeriodoPresupuestario`, `PartidaPresupuestaria` y `MovimientoPresupuestario`.
+    *   Generar las migraciones de la base de datos.
+    *   Crear los nuevos Serializers y ViewSets para gestionar estos modelos.
+    *   Modificar la lógica de `SolicitudCompra` y `OrdenCompra` para integrarse con el nuevo sistema.
+2.  **Frontend:**
+    *   Crear las nuevas interfaces para administrar los períodos y las partidas.
+    *   Diseñar un "Dashboard de Presupuesto" que muestre gráficos del gasto.
+    *   Modificar el formulario de "Nueva Solicitud de Compra" para añadir el selector de partidas.
+
+Este es un cambio estructural importante, pero transformará la aplicación en una herramienta de gestión financiera mucho más seria y completa.
+
+Espero tus comentarios sobre esta propuesta.

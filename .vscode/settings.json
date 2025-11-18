@@ -1,0 +1,6 @@
+{
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "python-envs.pythonProjects": [],
+    "cmake.sourceDirectory": "C:/Activos Fijos/sprintespecial/movil2/linux",
+    "java.configuration.updateBuildConfiguration": "interactive"
+}

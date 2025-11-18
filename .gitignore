@@ -1,0 +1,14 @@
+# --- Python/Django ---
+venv/
+__pycache__/
+*.sqlite3
+
+# --- Node/React Frontend ---
+node_modules/
+/frontend/dist
+
+# --- Archivos de Compilación Móvil (La Causa del Error) ---
+/movil/build/
+/movil/.dart_tool/
+/movil/android/build/
+/movil/ios/build/

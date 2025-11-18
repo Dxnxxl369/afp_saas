@@ -1,0 +1,27 @@
+# --- Core Framework ---
+django
+djangorestframework
+
+# --- Autenticación y Seguridad ---
+djangorestframework-simplejwt
+django-cors-headers
+
+# --- Base de Datos (PostgreSQL) ---
+# Driver para conectar Django con PostgreSQL
+psycopg2-binary
+
+# --- Manejo de Archivos (Fotos) ---
+# Necesario para ImageField (fotos de perfil y activos)
+Pillow
+
+# --- Reportes ---
+# Para generar archivos Excel (.xlsx)
+openpyxl
+# Para generar archivos PDF
+reportlab
+
+# --- Utilidades (Recomendado para Colaboración y Despliegue) ---
+# Para manejar variables de entorno (archivos .env)
+python-dotenv
+# Servidor WSGI (necesario para desplegar en producción, bueno para estandarizar)
+gunicorn

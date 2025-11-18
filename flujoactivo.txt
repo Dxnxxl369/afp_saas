@@ -1,0 +1,49 @@
+Claro, aquí tienes una guía de cómo funciona el nuevo flujo de adquisición de activos, explicado según los roles que podrían intervenir.
+
+### Resumen del Flujo de Adquisición por Rol
+
+**1. Rol: Empleado (El que necesita el activo)**
+*   **Permiso clave necesario:** `manage_solicitud_compra` (para poder crearla).
+
+*   **Pasos:**
+    1.  **Iniciar la Solicitud:** El empleado va al nuevo módulo **"Solicitudes de Compra"** en el menú lateral.
+    2.  **Crear:** Hace clic en el botón "Nueva Solicitud".
+    3.  **Rellenar:** Completa el formulario indicando qué activo necesita, por qué lo necesita (justificación), a qué departamento pertenece y el costo aproximado.
+    4.  **Seguimiento:** Una vez guardada, la solicitud aparece en la lista con el estado **"PENDIENTE"**. El empleado puede ver el estado de sus propias solicitudes para saber si fueron aprobadas o rechazadas.
+
+**2. Rol: Jefe de Departamento (El que aprueba el gasto)**
+*   **Permiso clave necesario:** `approve_solicitud_compra`.
+
+*   **Pasos:**
+    1.  **Revisar Solicitudes:** El jefe de departamento entra al módulo **"Solicitudes de Compra"**. A diferencia del empleado, él verá todas las solicitudes pendientes de la empresa.
+    2.  **Tomar una Decisión:** Junto a cada solicitud con estado "PENDIENTE", verá dos botones: uno para aprobar y otro para rechazar.
+    3.  **Aprobar:** Si hace clic en "Aprobar", el estado de la solicitud cambia a **"APROBADA"**. La solicitud ahora está lista para que el equipo de compras actúe.
+    4.  **Rechazar:** Si hace clic en "Rechazar", se le pedirá que escriba un breve motivo. Tras confirmarlo, el estado de la solicitud cambia a **"RECHAZADA"**, y el proceso termina para esa solicitud.
+
+**3. Rol: Administrador / Compras (El que ejecuta la compra y registra el activo)**
+*   **Permisos clave necesarios:** `manage_orden_compra` y `receive_orden_compra`.
+
+*   **Pasos (Parte 1 - Crear la Orden):**
+    1.  **Ir a Órdenes de Compra:** Este usuario va al nuevo módulo **"Órdenes de Compra"**.
+    2.  **Crear Orden:** Hace clic en "Nueva Orden".
+    3.  **Seleccionar Solicitud:** Se le presenta un formulario donde el campo más importante es una lista desplegable que **únicamente contiene las solicitudes que ya fueron APROBADAS** por un jefe.
+    4.  **Completar y Enviar:** Selecciona la solicitud, elige un proveedor de la lista y especifica el precio final que se negoció. Al guardar, se crea la orden de compra con estado **"GENERADA"** o **"ENVIADA"**.
+
+*   **Pasos (Parte 2 - Recibir el Activo):**
+    1.  **Recepción Física:** Cuando el activo llega físicamente a la empresa, el administrador vuelve al módulo de **"Órdenes de Compra"**.
+    2.  **Confirmar Recepción:** Busca la orden correspondiente y hace clic en el botón **"Recibir"**.
+    3.  **Detalles Finales:** Se abre un último formulario donde debe completar la información final del activo: su `Categoría`, `Ubicación` inicial, `Estado` inicial (ej: "En Almacén") y su `Vida Útil` en años.
+    4.  **¡Magia!** Al confirmar, el sistema hace dos cosas automáticamente:
+        *   La Orden de Compra se marca como **"COMPLETADA"**.
+        *   Se crea un nuevo registro en el módulo de **"Activos Fijos"** con todos los datos recopilados, listo para ser usado y depreciado en el futuro.
+
+Este flujo asegura que ningún activo se registre sin haber pasado por un proceso de solicitud y aprobación, manteniendo un control financiero y de inventario mucho más estricto.
+
+
+
+NOTA DE NATALIA
+1 ASignar divisa
+2 Gestionar inventario
+3. asignar depreciacion
+    impuesto financiero
+4. cambio de vida util cambiar 

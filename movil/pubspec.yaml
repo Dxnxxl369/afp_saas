@@ -1,0 +1,41 @@
+name: movil
+description: "A new Flutter project."
+
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # --- Paquetes Principales ---
+  provider: ^6.1.1
+  dio: ^5.4.3 # <-- El reemplazo de 'http'. Es más potente.
+  shared_preferences: ^2.2.2
+  jwt_decode: ^0.3.1
+
+  # --- UI y Personalización ---
+  lucide_flutter: ^0.548.0
+  flutter_colorpicker: ^1.0.3
+  cached_network_image: ^3.3.0
+
+  # --- Paquetes Futuros ---
+  image_picker: ^1.0.4
+  speech_to_text: ^7.3.0
+
+  cupertino_icons: ^1.0.8
+  
+    
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+
+  uses-material-design: true
+

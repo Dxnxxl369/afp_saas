@@ -1,0 +1,86 @@
+PS C:\Activos Fijos\sprintespecial-con ia\frontend3> npm run dev
+
+> frontend3@0.0.0 dev
+> vite
+
+
+  VITE v5.4.21  ready in 344 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+  ➜  press h + enter to show help
+10:14:34 p. m. [vite] Pre-transform error: C:\Activos Fijos\sprintespecial-con ia\frontend3\src\pages\presupuesto\PartidasPresupuestariasList.jsx: Unexpected token, expected "," (198:36)
+
+  196 |                                             );
+  197 |                                         }
+> 198 |                                     })
+      |                                     ^
+  199 |                                 )}
+  200 |                             </tbody>
+  201 |                         </table>
+10:14:34 p. m. [vite] Internal server error: C:\Activos Fijos\sprintespecial-con ia\frontend3\src\pages\presupuesto\PartidasPresupuestariasList.jsx: Unexpected token, expected "," (198:36)
+
+  196 |                                             );
+  197 |                                         }
+> 198 |                                     })
+      |                                     ^
+  199 |                                 )}
+  200 |                             </tbody>
+  201 |                         </table>
+  Plugin: vite:react-babel
+  File: C:/Activos Fijos/sprintespecial-con ia/frontend3/src/pages/presupuesto/PartidasPresupuestariasList.jsx:198:36
+  196|                                              );
+  197|                                          }
+  198|                                      })
+     |                                      ^
+  199|                                  )}
+  200|                              </tbody>
+      at constructor (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:367:19)
+      at JSXParserMixin.raise (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:6624:19)
+      at JSXParserMixin.unexpected (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:6644:16)
+      at JSXParserMixin.expect (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:6924:12)
+      at JSXParserMixin.parseCallExpressionArguments (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:11307:14)
+      at JSXParserMixin.parseCoverCallAndAsyncArrowHead (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:11250:29)
+      at JSXParserMixin.parseSubscript (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:11184:19)    
+      at JSXParserMixin.parseSubscripts (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:11158:19)   
+      at JSXParserMixin.parseExprSubscripts (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:11149:17)
+      at JSXParserMixin.parseUpdate (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:11130:21)       
+      at JSXParserMixin.parseMaybeUnary (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:11110:23)   
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10963:61)
+      at JSXParserMixin.parseExprOps (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10968:23)      
+      at JSXParserMixin.parseMaybeConditional (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10945:23)
+      at JSXParserMixin.parseMaybeAssign (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10895:21)  
+      at C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10864:39
+      at JSXParserMixin.allowInAnd (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:12500:12)        
+      at JSXParserMixin.parseMaybeAssignAllowIn (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10864:17)
+      at JSXParserMixin.parseMaybeAssignAllowInOrVoidPattern (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:12567:17)
+      at JSXParserMixin.parseParenAndDistinguishExpression (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:11747:28)
+      at JSXParserMixin.parseExprAtom (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:11395:23)     
+      at JSXParserMixin.parseExprAtom (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:4793:20)      
+      at JSXParserMixin.parseExprSubscripts (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:11145:23)
+      at JSXParserMixin.parseUpdate (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:11130:21)       
+      at JSXParserMixin.parseMaybeUnary (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:11110:23)   
+      at JSXParserMixin.parseMaybeUnaryOrPrivate (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10963:61)
+      at JSXParserMixin.parseExprOps (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10968:23)      
+      at JSXParserMixin.parseMaybeConditional (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10945:23)
+      at JSXParserMixin.parseMaybeAssign (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10895:21)  
+      at JSXParserMixin.parseConditional (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10957:29)  
+      at JSXParserMixin.parseMaybeConditional (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10949:17)
+      at JSXParserMixin.parseMaybeAssign (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10895:21)  
+      at JSXParserMixin.parseConditional (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10957:29)  
+      at JSXParserMixin.parseMaybeConditional (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10949:17)
+      at JSXParserMixin.parseMaybeAssign (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10895:21)  
+      at JSXParserMixin.parseExpressionBase (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10848:23)
+      at C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10844:39
+      at JSXParserMixin.allowInAnd (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:12500:12)        
+      at JSXParserMixin.parseExpression (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10844:17)   
+      at JSXParserMixin.jsxParseExpressionContainer (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:4661:31)
+      at JSXParserMixin.jsxParseElementAt (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:4740:36)  
+      at JSXParserMixin.jsxParseElementAt (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:4727:32)  
+      at JSXParserMixin.jsxParseElementAt (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:4727:32)  
+      at JSXParserMixin.jsxParseElementAt (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:4727:32)  
+      at JSXParserMixin.jsxParseElementAt (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:4727:32)  
+      at JSXParserMixin.jsxParseElementAt (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:4727:32)  
+      at JSXParserMixin.jsxParseElement (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:4778:17)    
+      at JSXParserMixin.parseExprAtom (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:4788:19)      
+      at JSXParserMixin.parseExprSubscripts (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:11145:23)

@@ -1,0 +1,34 @@
+PS C:\Activos Fijos\sprintespecial-con ia\frontend3> npm run dev    
+
+> frontend3@0.0.0 dev
+> vite
+
+Port 5173 is in use, trying another one...
+
+  VITE v5.4.20  ready in 516 ms
+
+  ➜  Local:   http://localhost:5174/
+  ➜  Network: use --host to expose
+  ➜  press h + enter to show help
+7:17:50 p. m. [vite] Internal server error: Cannot find module 'C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\vite\dist\node\chunks\dep-D-7KCb9p.js' imported from C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\vite\dist\node\chunks\dep-D_zLpgQd.js
+      at finalizeResolution (node:internal/modules/esm/resolve:257:11)
+      at moduleResolve (node:internal/modules/esm/resolve:913:10)
+      at defaultResolve (node:internal/modules/esm/resolve:1037:11)
+      at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:650:12)
+      at #cachedDefaultResolve (node:internal/modules/esm/loader:599:25)
+      at ModuleLoader.resolve (node:internal/modules/esm/loader:582:38)
+      at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:241:38)
+      at onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:542:36)
+      at TracingChannel.tracePromise (node:diagnostics_channel:337:14)
+      at ModuleLoader.import (node:internal/modules/esm/loader:541:21)
+7:18:50 p. m. [vite] Internal server error: Cannot find module 'C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\vite\dist\node\chunks\dep-D-7KCb9p.js' imported from C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\vite\dist\node\chunks\dep-D_zLpgQd.js      
+      at finalizeResolution (node:internal/modules/esm/resolve:257:11)
+      at moduleResolve (node:internal/modules/esm/resolve:913:10)
+      at defaultResolve (node:internal/modules/esm/resolve:1037:11)
+      at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:650:12)
+      at #cachedDefaultResolve (node:internal/modules/esm/loader:599:25)
+      at ModuleLoader.resolve (node:internal/modules/esm/loader:582:38)
+      at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:241:38)
+      at onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:542:36)
+      at TracingChannel.tracePromise (node:diagnostics_channel:337:14)
+      at ModuleLoader.import (node:internal/modules/esm/loader:541:21) (x2)
