@@ -10,6 +10,12 @@ import '../models/partida_presupuestaria.dart';
 import '../models/solicitud_compra.dart';
 import '../models/orden_compra.dart';
 import '../models/activo_fijo.dart';
+import '../models/cargo.dart';
+import '../models/ubicacion.dart';
+import '../models/estado.dart';
+import '../models/mantenimiento.dart';
+import '../models/empleado.dart';
+import '../models/suscripcion.dart';
 
 class ApiService {
   final Dio _dio;
@@ -122,7 +128,230 @@ class ApiService {
     }
   }
 
-  // --- 5. Presupuestos: Periodos ---
+  // --- 5. Cargos ---
+  Future<List<Cargo>> getCargos() async {
+    try {
+      final response = await _dio.get('/cargos/');
+      final data = response.data;
+      List<dynamic> dataList = (data is Map && data.containsKey('results'))
+          ? data['results'] as List
+          : data as List;
+      return dataList.map((json) => Cargo.fromJson(json)).toList();
+    } on DioException catch (e) {
+      throw Exception('Error al cargar cargos: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<Cargo> createCargo(String nombre, String? descripcion) async {
+    try {
+      final response = await _dio.post('/cargos/', data: {
+        'nombre': nombre,
+        'descripcion': descripcion,
+      });
+      return Cargo.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception('Error al crear cargo: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<Cargo> updateCargo(String id, String nombre, String? descripcion) async {
+    try {
+      final response = await _dio.patch('/cargos/$id/', data: {
+        'nombre': nombre,
+        'descripcion': descripcion,
+      });
+      return Cargo.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception('Error al actualizar cargo: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<void> deleteCargo(String id) async {
+    try {
+      final response = await _dio.delete('/cargos/$id/');
+      if (response.statusCode != 204) {
+        throw Exception('Error al eliminar cargo: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error al eliminar cargo: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  // --- 6. Ubicaciones ---
+  Future<List<Ubicacion>> getUbicaciones() async {
+    try {
+      final response = await _dio.get('/ubicaciones/');
+      final data = response.data;
+      List<dynamic> dataList = (data is Map && data.containsKey('results'))
+          ? data['results'] as List
+          : data as List;
+      return dataList.map((json) => Ubicacion.fromJson(json)).toList();
+    } on DioException catch (e) {
+      throw Exception('Error al cargar ubicaciones: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<Ubicacion> createUbicacion(String nombre, String? direccion, String? detalle) async {
+    try {
+      final response = await _dio.post('/ubicaciones/', data: {
+        'nombre': nombre,
+        'direccion': direccion,
+        'detalle': detalle,
+      });
+      return Ubicacion.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception('Error al crear ubicación: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<Ubicacion> updateUbicacion(String id, String nombre, String? direccion, String? detalle) async {
+    try {
+      final response = await _dio.patch('/ubicaciones/$id/', data: {
+        'nombre': nombre,
+        'direccion': direccion,
+        'detalle': detalle,
+      });
+      return Ubicacion.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception('Error al actualizar ubicación: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<void> deleteUbicacion(String id) async {
+    try {
+      final response = await _dio.delete('/ubicaciones/$id/');
+      if (response.statusCode != 204) {
+        throw Exception('Error al eliminar ubicación: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error al eliminar ubicación: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  // --- 7. Estados ---
+  Future<List<Estado>> getEstados() async {
+    try {
+      final response = await _dio.get('/estados/');
+      final data = response.data;
+      List<dynamic> dataList = (data is Map && data.containsKey('results'))
+          ? data['results'] as List
+          : data as List;
+      return dataList.map((json) => Estado.fromJson(json)).toList();
+    } on DioException catch (e) {
+      throw Exception('Error al cargar estados: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<Estado> createEstado(String nombre, String? detalle) async {
+    try {
+      final response = await _dio.post('/estados/', data: {
+        'nombre': nombre,
+        'detalle': detalle,
+      });
+      return Estado.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception('Error al crear estado: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<Estado> updateEstado(String id, String nombre, String? detalle) async {
+    try {
+      final response = await _dio.patch('/estados/$id/', data: {
+        'nombre': nombre,
+        'detalle': detalle,
+      });
+      return Estado.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception('Error al actualizar estado: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<void> deleteEstado(String id) async {
+    try {
+      final response = await _dio.delete('/estados/$id/');
+      if (response.statusCode != 204) {
+        throw Exception('Error al eliminar estado: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error al eliminar estado: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  // --- 8. Mantenimientos ---
+  Future<List<Mantenimiento>> getMantenimientos() async {
+    try {
+      final response = await _dio.get('/mantenimientos/');
+      final data = response.data;
+      List<dynamic> dataList = (data is Map && data.containsKey('results'))
+          ? data['results'] as List
+          : data as List;
+      return dataList.map((json) => Mantenimiento.fromJson(json)).toList();
+    } on DioException catch (e) {
+      throw Exception('Error al cargar mantenimientos: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<Mantenimiento> createMantenimiento(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post('/mantenimientos/', data: data);
+      return Mantenimiento.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception('Error al crear mantenimiento: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<Mantenimiento> updateMantenimiento(String id, Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.patch('/mantenimientos/$id/', data: data);
+      return Mantenimiento.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception('Error al actualizar mantenimiento: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<void> deleteMantenimiento(String id) async {
+    try {
+      final response = await _dio.delete('/mantenimientos/$id/');
+      if (response.statusCode != 204) {
+        throw Exception('Error al eliminar mantenimiento: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error al eliminar mantenimiento: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  // --- 9. Empleados ---
+  Future<List<Empleado>> getEmpleados() async {
+    try {
+      final response = await _dio.get('/empleados/');
+      final data = response.data;
+      List<dynamic> dataList = (data is Map && data.containsKey('results'))
+          ? data['results'] as List
+          : data as List;
+      return dataList.map((json) => Empleado.fromJson(json)).toList();
+    } on DioException catch (e) {
+      throw Exception('Error al cargar empleados: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  // --- 10. Suscripcion ---
+  Future<Suscripcion?> getSuscripcion() async {
+    try {
+      final response = await _dio.get('/suscripciones/');
+      final data = response.data;
+      List<dynamic> dataList = (data is Map && data.containsKey('results'))
+          ? data['results'] as List
+          : data as List;
+      if (dataList.isNotEmpty) {
+        return Suscripcion.fromJson(dataList.first);
+      }
+      return null;
+    } on DioException catch (e) {
+      throw Exception('Error al cargar la suscripción: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  // --- 11. Presupuestos: Periodos ---
   Future<List<PeriodoPresupuestario>> getPeriodos() async {
     try {
       final response = await _dio.get('/periodos-presupuestarios/');

@@ -1,10 +1,8 @@
 // lib/providers/departamento_provider.dart
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import '../models/departamento.dart';
 import '../services/api_service.dart';
-
-enum LoadingState { idle, loading, success, error }
+import 'provider_state.dart';
 
 class DepartamentoProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();

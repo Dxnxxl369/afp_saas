@@ -2,9 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:lucide_flutter/lucide_flutter.dart';
 
 import '../../providers/activo_fijo_provider.dart';
-import '../../models/activo_fijo.dart';
+import '../../providers/provider_state.dart';
 
 class ActivosScreen extends StatefulWidget {
   const ActivosScreen({super.key});
@@ -18,7 +19,10 @@ class _ActivosScreenState extends State<ActivosScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ActivoFijoProvider>().fetchActivos();
+      final provider = context.read<ActivoFijoProvider>();
+      if (provider.loadingState == LoadingState.idle) {
+        provider.fetchActivos();
+      }
     });
   }
 
@@ -27,16 +31,29 @@ class _ActivosScreenState extends State<ActivosScreen> {
     return Scaffold(
       body: Consumer<ActivoFijoProvider>(
         builder: (context, provider, child) {
-          if (provider.isLoading) {
+          if (provider.loadingState == LoadingState.loading && provider.activos.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (provider.error != null) {
-            return Center(child: Text('Error: ${provider.error}'));
+          if (provider.loadingState == LoadingState.error) {
+            return Center(child: Text('Error: ${provider.errorMessage}'));
           }
 
-          if (provider.activos.isEmpty) {
-            return const Center(child: Text('No hay activos fijos registrados.'));
+          if (provider.loadingState == LoadingState.success && provider.activos.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('No hay activos fijos para mostrar.'),
+                  const SizedBox(height: 10),
+                  ElevatedButton.icon(
+                     icon: const Icon(LucideIcons.refreshCw, size: 16),
+                     label: const Text('Recargar'),
+                     onPressed: () => provider.fetchActivos(),
+                  )
+                ],
+              ),
+            );
           }
 
           return RefreshIndicator(

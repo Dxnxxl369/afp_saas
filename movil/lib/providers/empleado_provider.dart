@@ -1,33 +1,32 @@
-// lib/providers/activo_fijo_provider.dart
+// lib/providers/empleado_provider.dart
 import 'package:flutter/foundation.dart';
+import '../models/empleado.dart';
 import '../services/api_service.dart';
-import '../models/activo_fijo.dart';
 import 'provider_state.dart';
 
-class ActivoFijoProvider with ChangeNotifier {
+class EmpleadoProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
 
-  List<ActivoFijo> _activos = [];
+  List<Empleado> _empleados = [];
   LoadingState _loadingState = LoadingState.idle;
   String _errorMessage = '';
 
-  List<ActivoFijo> get activos => _activos;
+  List<Empleado> get empleados => _empleados;
   LoadingState get loadingState => _loadingState;
   String get errorMessage => _errorMessage;
-
-  Future<void> fetchActivos() async {
+  
+  Future<void> fetchEmpleados() async {
     if (_loadingState == LoadingState.loading) return;
     _loadingState = LoadingState.loading;
-    notifyListeners();
-
+    
     try {
-      _activos = await _apiService.getActivos();
+      _empleados = await _apiService.getEmpleados();
       _loadingState = LoadingState.success;
     } catch (e) {
       _loadingState = LoadingState.error;
       _errorMessage = e.toString();
-    } finally {
-      notifyListeners();
+      debugPrint("EmpleadoProvider Error: $_errorMessage");
     }
+    notifyListeners();
   }
 }

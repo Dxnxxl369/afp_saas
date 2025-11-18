@@ -10,7 +10,12 @@ import 'providers/presupuesto_provider.dart';
 import 'providers/solicitud_compra_provider.dart';
 import 'providers/orden_compra_provider.dart';
 import 'providers/activo_fijo_provider.dart';
-//import 'providers/empleado_provider.dart';
+import 'providers/cargos_provider.dart';
+import 'providers/ubicaciones_provider.dart';
+import 'providers/estados_provider.dart';
+import 'providers/mantenimiento_provider.dart';
+import 'providers/empleado_provider.dart';
+import 'providers/suscripcion_provider.dart';
 
 // Importar Pantallas
 import 'screens/home_screen.dart'; // <-- Archivo que te faltaba
@@ -49,11 +54,16 @@ class MyApp extends StatelessWidget {
         // 3. Providers de Datos (Ahora son 'lazy' por defecto)
         // Se crearán pero no cargarán datos hasta que se usen
         ChangeNotifierProvider(create: (_) => DepartamentoProvider()),
+        ChangeNotifierProvider(create: (_) => CargosProvider()),
+        ChangeNotifierProvider(create: (_) => UbicacionesProvider()),
+        ChangeNotifierProvider(create: (_) => EstadosProvider()),
         ChangeNotifierProvider(create: (_) => PresupuestoProvider()),
         ChangeNotifierProvider(create: (_) => SolicitudCompraProvider()),
         ChangeNotifierProvider(create: (_) => OrdenCompraProvider()),
         ChangeNotifierProvider(create: (_) => ActivoFijoProvider()),
-        //ChangeNotifierProvider(create: (_) => EmpleadoProvider()),
+        ChangeNotifierProvider(create: (_) => MantenimientoProvider()),
+        ChangeNotifierProvider(create: (_) => EmpleadoProvider()),
+        ChangeNotifierProvider(create: (_) => SuscripcionProvider()),
         // (Añadir más providers de módulos aquí)
       ],
       child: Consumer<ThemeProvider>(

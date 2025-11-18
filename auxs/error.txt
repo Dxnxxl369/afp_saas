@@ -1,32 +1,172 @@
-(venv) PS C:\Activos Fijos\sprintespecial-con ia\backend> py -3.11-64 manage.py runserver 0.0.0.0:8000
-Watching for file changes with StatReloader
-Exception in thread django-main-thread:
-Traceback (most recent call last):
-  File "C:\Users\HP\AppData\Local\Programs\Python\Python311\Lib\threading.py", line 1045, in _bootstrap_inner
-    self.run()
-  File "C:\Users\HP\AppData\Local\Programs\Python\Python311\Lib\threading.py", line 982, in run
-    self._target(*self._args, **self._kwargs)
-  File "C:\Users\HP\AppData\Local\Programs\Python\Python311\Lib\site-packages\django\utils\autoreload.py", line 64, in wrapper
-    fn(*args, **kwargs)
-  File "C:\Users\HP\AppData\Local\Programs\Python\Python311\Lib\site-packages\django\core\management\commands\runserver.py", line 124, in inner_run
-    autoreload.raise_last_exception()
-  File "C:\Users\HP\AppData\Local\Programs\Python\Python311\Lib\site-packages\django\utils\autoreload.py", line 86, in raise_last_exception
-    raise _exception[1]
-  File "C:\Users\HP\AppData\Local\Programs\Python\Python311\Lib\site-packages\django\core\management\__init__.py", line 394, in execute
-    autoreload.check_errors(django.setup)()
-  File "C:\Users\HP\AppData\Local\Programs\Python\Python311\Lib\site-packages\django\utils\autoreload.py", line 64, in wrapper
-    fn(*args, **kwargs)
-  File "C:\Users\HP\AppData\Local\Programs\Python\Python311\Lib\site-packages\django\__init__.py", line 24, in setup
-    apps.populate(settings.INSTALLED_APPS)
-  File "C:\Users\HP\AppData\Local\Programs\Python\Python311\Lib\site-packages\django\apps\registry.py", line 91, in populate
-    app_config = AppConfig.create(entry)
-                 ^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\HP\AppData\Local\Programs\Python\Python311\Lib\site-packages\django\apps\config.py", line 193, in create
-    import_module(entry)
-  File "C:\Users\HP\AppData\Local\Programs\Python\Python311\Lib\importlib\__init__.py", line 126, in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
-  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
-  File "<frozen importlib._bootstrap>", line 1140, in _find_and_load_unlocked
-ModuleNotFoundError: No module named 'rest_framework_simplejwt'
+PS C:\Activos Fijos\sprintespecial-con ia\movil> flutter build apk --debug
+Support for Android x86 targets will be removed in the next stable release after 3.27. See https://github.com/flutter/flutter/issues/157543
+for details.
+lib/screens/departamentos_screen.dart:24:36: Error: The getter 'LoadingState' isn't defined for the class '_DepartamentosScreenState'.        
+ - '_DepartamentosScreenState' is from 'package:movil/screens/departamentos_screen.dart' ('lib/screens/departamentos_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+      if (provider.loadingState == LoadingState.idle) {
+                                   ^^^^^^^^^^^^
+lib/screens/departamentos_screen.dart:51:40: Error: The getter 'LoadingState' isn't defined for the class '_DepartamentosScreenState'.        
+ - '_DepartamentosScreenState' is from 'package:movil/screens/departamentos_screen.dart' ('lib/screens/departamentos_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+          if (provider.loadingState == LoadingState.loading && provider.departamentos.isEmpty) {
+                                       ^^^^^^^^^^^^
+lib/screens/departamentos_screen.dart:54:40: Error: The getter 'LoadingState' isn't defined for the class '_DepartamentosScreenState'.        
+ - '_DepartamentosScreenState' is from 'package:movil/screens/departamentos_screen.dart' ('lib/screens/departamentos_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+          if (provider.loadingState == LoadingState.error) {
+                                       ^^^^^^^^^^^^
+lib/screens/departamentos_screen.dart:60:40: Error: The getter 'LoadingState' isn't defined for the class '_DepartamentosScreenState'.        
+ - '_DepartamentosScreenState' is from 'package:movil/screens/departamentos_screen.dart' ('lib/screens/departamentos_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+          if (provider.loadingState == LoadingState.success && provider.departamentos.isEmpty) {
+                                       ^^^^^^^^^^^^
+lib/screens/cargos/cargos_screen.dart:23:36: Error: The getter 'LoadingState' isn't defined for the class '_CargosScreenState'.
+ - '_CargosScreenState' is from 'package:movil/screens/cargos/cargos_screen.dart' ('lib/screens/cargos/cargos_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+      if (provider.loadingState == LoadingState.idle) {
+                                   ^^^^^^^^^^^^
+lib/screens/cargos/cargos_screen.dart:36:40: Error: The getter 'LoadingState' isn't defined for the class '_CargosScreenState'.
+ - '_CargosScreenState' is from 'package:movil/screens/cargos/cargos_screen.dart' ('lib/screens/cargos/cargos_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+          if (provider.loadingState == LoadingState.loading && provider.cargos.isEmpty) {
+                                       ^^^^^^^^^^^^
+lib/screens/cargos/cargos_screen.dart:39:40: Error: The getter 'LoadingState' isn't defined for the class '_CargosScreenState'.
+ - '_CargosScreenState' is from 'package:movil/screens/cargos/cargos_screen.dart' ('lib/screens/cargos/cargos_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+          if (provider.loadingState == LoadingState.error) {
+                                       ^^^^^^^^^^^^
+lib/screens/cargos/cargos_screen.dart:45:40: Error: The getter 'LoadingState' isn't defined for the class '_CargosScreenState'.
+ - '_CargosScreenState' is from 'package:movil/screens/cargos/cargos_screen.dart' ('lib/screens/cargos/cargos_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+          if (provider.loadingState == LoadingState.success && provider.cargos.isEmpty) {
+                                       ^^^^^^^^^^^^
+lib/screens/ubicaciones/ubicaciones_screen.dart:23:36: Error: The getter 'LoadingState' isn't defined for the class '_UbicacionesScreenState'.
+ - '_UbicacionesScreenState' is from 'package:movil/screens/ubicaciones/ubicaciones_screen.dart' ('lib/screens/ubicaciones/ubicaciones_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+      if (provider.loadingState == LoadingState.idle) {
+                                   ^^^^^^^^^^^^
+lib/screens/ubicaciones/ubicaciones_screen.dart:36:40: Error: The getter 'LoadingState' isn't defined for the class '_UbicacionesScreenState'.
+ - '_UbicacionesScreenState' is from 'package:movil/screens/ubicaciones/ubicaciones_screen.dart' ('lib/screens/ubicaciones/ubicaciones_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+          if (provider.loadingState == LoadingState.loading && provider.ubicaciones.isEmpty) {
+                                       ^^^^^^^^^^^^
+lib/screens/ubicaciones/ubicaciones_screen.dart:39:40: Error: The getter 'LoadingState' isn't defined for the class '_UbicacionesScreenState'.
+ - '_UbicacionesScreenState' is from 'package:movil/screens/ubicaciones/ubicaciones_screen.dart' ('lib/screens/ubicaciones/ubicaciones_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+          if (provider.loadingState == LoadingState.error) {
+                                       ^^^^^^^^^^^^
+lib/screens/ubicaciones/ubicaciones_screen.dart:45:40: Error: The getter 'LoadingState' isn't defined for the class '_UbicacionesScreenState'.
+ - '_UbicacionesScreenState' is from 'package:movil/screens/ubicaciones/ubicaciones_screen.dart' ('lib/screens/ubicaciones/ubicaciones_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+          if (provider.loadingState == LoadingState.success && provider.ubicaciones.isEmpty) {
+                                       ^^^^^^^^^^^^
+lib/screens/estados/estados_screen.dart:23:36: Error: The getter 'LoadingState' isn't defined for the class '_EstadosScreenState'.
+ - '_EstadosScreenState' is from 'package:movil/screens/estados/estados_screen.dart' ('lib/screens/estados/estados_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+      if (provider.loadingState == LoadingState.idle) {
+                                   ^^^^^^^^^^^^
+lib/screens/estados/estados_screen.dart:36:40: Error: The getter 'LoadingState' isn't defined for the class '_EstadosScreenState'.
+ - '_EstadosScreenState' is from 'package:movil/screens/estados/estados_screen.dart' ('lib/screens/estados/estados_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+          if (provider.loadingState == LoadingState.loading && provider.estados.isEmpty) {
+                                       ^^^^^^^^^^^^
+lib/screens/estados/estados_screen.dart:39:40: Error: The getter 'LoadingState' isn't defined for the class '_EstadosScreenState'.
+ - '_EstadosScreenState' is from 'package:movil/screens/estados/estados_screen.dart' ('lib/screens/estados/estados_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+          if (provider.loadingState == LoadingState.error) {
+                                       ^^^^^^^^^^^^
+lib/screens/estados/estados_screen.dart:45:40: Error: The getter 'LoadingState' isn't defined for the class '_EstadosScreenState'.
+ - '_EstadosScreenState' is from 'package:movil/screens/estados/estados_screen.dart' ('lib/screens/estados/estados_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+          if (provider.loadingState == LoadingState.success && provider.estados.isEmpty) {
+                                       ^^^^^^^^^^^^
+lib/screens/activos/activos_screen.dart:30:24: Error: The getter 'isLoading' isn't defined for the class 'ActivoFijoProvider'.
+ - 'ActivoFijoProvider' is from 'package:movil/providers/activo_fijo_provider.dart' ('lib/providers/activo_fijo_provider.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'isLoading'.
+          if (provider.isLoading) {
+                       ^^^^^^^^^
+lib/screens/activos/activos_screen.dart:34:24: Error: The getter 'error' isn't defined for the class 'ActivoFijoProvider'.
+ - 'ActivoFijoProvider' is from 'package:movil/providers/activo_fijo_provider.dart' ('lib/providers/activo_fijo_provider.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'error'.
+          if (provider.error != null) {
+                       ^^^^^
+lib/screens/activos/activos_screen.dart:35:58: Error: The getter 'error' isn't defined for the class 'ActivoFijoProvider'.
+ - 'ActivoFijoProvider' is from 'package:movil/providers/activo_fijo_provider.dart' ('lib/providers/activo_fijo_provider.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'error'.
+            return Center(child: Text('Error: ${provider.error}'));
+                                                         ^^^^^
+lib/screens/mantenimiento/mantenimiento_screen.dart:27:36: Error: The getter 'LoadingState' isn't defined for the class '_MantenimientoScreenState'.
+ - '_MantenimientoScreenState' is from 'package:movil/screens/mantenimiento/mantenimiento_screen.dart' ('lib/screens/mantenimiento/mantenimiento_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+      if (provider.loadingState == LoadingState.idle) {
+                                   ^^^^^^^^^^^^
+lib/screens/mantenimiento/mantenimiento_screen.dart:40:40: Error: The getter 'LoadingState' isn't defined for the class '_MantenimientoScreenState'.
+ - '_MantenimientoScreenState' is from 'package:movil/screens/mantenimiento/mantenimiento_screen.dart' ('lib/screens/mantenimiento/mantenimiento_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+          if (provider.loadingState == LoadingState.loading && provider.mantenimientos.isEmpty) {
+                                       ^^^^^^^^^^^^
+lib/screens/mantenimiento/mantenimiento_screen.dart:43:40: Error: The getter 'LoadingState' isn't defined for the class '_MantenimientoScreenState'.
+ - '_MantenimientoScreenState' is from 'package:movil/screens/mantenimiento/mantenimiento_screen.dart' ('lib/screens/mantenimiento/mantenimiento_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+          if (provider.loadingState == LoadingState.error) {
+                                       ^^^^^^^^^^^^
+lib/screens/mantenimiento/mantenimiento_screen.dart:49:40: Error: The getter 'LoadingState' isn't defined for the class '_MantenimientoScreenState'.
+ - '_MantenimientoScreenState' is from 'package:movil/screens/mantenimiento/mantenimiento_screen.dart' ('lib/screens/mantenimiento/mantenimiento_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+          if (provider.loadingState == LoadingState.success && provider.mantenimientos.isEmpty) {
+                                       ^^^^^^^^^^^^
+lib/screens/mantenimiento/mantenimiento_screen.dart:141:43: Error: The getter 'LoadingState' isn't defined for the class '_MantenimientoScreenState'.
+ - '_MantenimientoScreenState' is from 'package:movil/screens/mantenimiento/mantenimiento_screen.dart' ('lib/screens/mantenimiento/mantenimiento_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+        if(activoProvider.loadingState == LoadingState.idle) activoProvider.fetchActivos();
+                                          ^^^^^^^^^^^^
+lib/screens/mantenimiento/mantenimiento_screen.dart:144:45: Error: The getter 'LoadingState' isn't defined for the class '_MantenimientoScreenState'.
+ - '_MantenimientoScreenState' is from 'package:movil/screens/mantenimiento/mantenimiento_screen.dart' ('lib/screens/mantenimiento/mantenimiento_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+        if(empleadoProvider.loadingState == LoadingState.idle) empleadoProvider.fetchEmpleados();
+                                            ^^^^^^^^^^^^
+lib/screens/mantenimiento/mantenimiento_screen.dart:158:52: Error: The getter 'LoadingState' isn't defined for the class '_MantenimientoScreenState'.
+ - '_MantenimientoScreenState' is from 'package:movil/screens/mantenimiento/mantenimiento_screen.dart' ('lib/screens/mantenimiento/mantenimiento_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+                      if (provider.loadingState == LoadingState.loading) {
+                                                   ^^^^^^^^^^^^
+lib/screens/mantenimiento/mantenimiento_screen.dart:180:52: Error: The getter 'LoadingState' isn't defined for the class '_MantenimientoScreenState'.
+ - '_MantenimientoScreenState' is from 'package:movil/screens/mantenimiento/mantenimiento_screen.dart' ('lib/screens/mantenimiento/mantenimiento_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+                      if (provider.loadingState == LoadingState.loading) {
+                                                   ^^^^^^^^^^^^
+lib/screens/suscripcion/suscripcion_screen.dart:22:36: Error: The getter 'LoadingState' isn't defined for the class '_SuscripcionScreenState'.
+ - '_SuscripcionScreenState' is from 'package:movil/screens/suscripcion/suscripcion_screen.dart' ('lib/screens/suscripcion/suscripcion_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+      if (provider.loadingState == LoadingState.idle) {
+                                   ^^^^^^^^^^^^
+lib/screens/suscripcion/suscripcion_screen.dart:33:40: Error: The getter 'LoadingState' isn't defined for the class '_SuscripcionScreenState'.
+ - '_SuscripcionScreenState' is from 'package:movil/screens/suscripcion/suscripcion_screen.dart' ('lib/screens/suscripcion/suscripcion_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+          if (provider.loadingState == LoadingState.loading) {
+                                       ^^^^^^^^^^^^
+lib/screens/suscripcion/suscripcion_screen.dart:36:40: Error: The getter 'LoadingState' isn't defined for the class '_SuscripcionScreenState'.
+ - '_SuscripcionScreenState' is from 'package:movil/screens/suscripcion/suscripcion_screen.dart' ('lib/screens/suscripcion/suscripcion_screen.dart').
+Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
+          if (provider.loadingState == LoadingState.error) {
+                                       ^^^^^^^^^^^^
+Target kernel_snapshot_program failed: Exception
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileFlutterBuildDebug'.
+> Process 'command 'C:\flutter\bin\flutter.bat'' finished with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 10s
+Running Gradle task 'assembleDebug'...                             11,2s
+Gradle task assembleDebug failed with exit code 1
+PS C:\Activos Fijos\sprintespecial-con ia\movil> 

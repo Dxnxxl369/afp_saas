@@ -7,8 +7,9 @@ from django.utils import timezone
 from datetime import timedelta
 from api.models import (
     Empresa, Empleado, Departamento, Cargo, Roles, Permisos,
-    CategoriaActivo, Estado, Ubicacion, Proveedor, ActivoFijo, Presupuesto,
-    Suscripcion, Mantenimiento, Notificacion # <-- [NUEVO] Importar
+    CategoriaActivo, Estado, Ubicacion, Proveedor, ActivoFijo, 
+    PeriodoPresupuestario, PartidaPresupuestaria, MovimientoPresupuestario,
+    Suscripcion, Mantenimiento, Notificacion
 )
 
 # --- CONTRASEÑA ACTUALIZADA ---
@@ -24,7 +25,9 @@ class Command(BaseCommand):
         # Limpiar modelos en orden inverso de dependencias
         Mantenimiento.objects.all().delete()
         ActivoFijo.objects.all().delete()
-        Presupuesto.objects.all().delete()
+        MovimientoPresupuestario.objects.all().delete()
+        PartidaPresupuestaria.objects.all().delete()
+        PeriodoPresupuestario.objects.all().delete()
         Notificacion.objects.all().delete()
         Suscripcion.objects.all().delete() # <-- [NUEVO]
         Empleado.objects.all().delete()

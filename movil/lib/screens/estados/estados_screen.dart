@@ -1,55 +1,40 @@
-// lib/screens/departamentos_screen.dart
+// lib/screens/estados/estados_screen.dart
 import 'package:flutter/material.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
 import 'package:provider/provider.dart';
-import '../models/departamento.dart';
-import '../providers/departamento_provider.dart';
-import '../providers/auth_provider.dart';
-import '../providers/provider_state.dart';
+import '../../models/estado.dart';
+import '../../providers/estados_provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/provider_state.dart';
 
-class DepartamentosScreen extends StatefulWidget {
-  const DepartamentosScreen({super.key});
+class EstadosScreen extends StatefulWidget {
+  const EstadosScreen({super.key});
 
   @override
-  State<DepartamentosScreen> createState() => _DepartamentosScreenState();
+  State<EstadosScreen> createState() => _EstadosScreenState();
 }
 
-class _DepartamentosScreenState extends State<DepartamentosScreen> {
+class _EstadosScreenState extends State<EstadosScreen> {
   
   @override
   void initState() {
     super.initState();
-    // Cargar los datos la primera vez que esta pantalla se construye
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = Provider.of<DepartamentoProvider>(context, listen: false);
+      final provider = Provider.of<EstadosProvider>(context, listen: false);
       if (provider.loadingState == LoadingState.idle) {
-        debugPrint("DepartamentosScreen: Fetching departamentos...");
-        provider.fetchDepartamentos();
+        provider.fetchEstados();
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // Leer permisos
-    final canManage = context.read<AuthProvider>().hasPermission('manage_departamento');
+    final canManage = context.read<AuthProvider>().hasPermission('manage_estadoactivo');
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Departamentos'),
-        // El AppBar ya está en HomeScreen, así que no necesitamos uno aquí
-        // (A menos que quieras un AppBar *dentro* del body)
-        // Esta pantalla se muestra *dentro* del body de HomeScreen,
-        // así que el AppBar principal ya está.
-        // Vamos a quitar este AppBar duplicado.
-      ),
-      // --- [CORRECCIÓN] No necesitamos un Scaffold si esto va en el body de HomeScreen ---
-      // El Scaffold (con AppBar y FAB) debe estar en la pantalla *contenedora*.
-      // `HomeScreen` ya tiene un Scaffold.
-      // `DepartamentosScreen` solo debe devolver el contenido del body.
-      body: Consumer<DepartamentoProvider>(
+      body: Consumer<EstadosProvider>(
         builder: (context, provider, child) {
-          if (provider.loadingState == LoadingState.loading && provider.departamentos.isEmpty) {
+          if (provider.loadingState == LoadingState.loading && provider.estados.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
           if (provider.loadingState == LoadingState.error) {
@@ -58,17 +43,17 @@ class _DepartamentosScreenState extends State<DepartamentosScreen> {
               child: Text('Error: ${provider.errorMessage}', textAlign: TextAlign.center),
             ));
           }
-          if (provider.loadingState == LoadingState.success && provider.departamentos.isEmpty) {
+          if (provider.loadingState == LoadingState.success && provider.estados.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('No hay departamentos para mostrar.'),
+                  const Text('No hay estados para mostrar.'),
                   const SizedBox(height: 10),
                   ElevatedButton.icon(
                      icon: const Icon(LucideIcons.refreshCw, size: 16),
                      label: const Text('Recargar'),
-                     onPressed: () => provider.fetchDepartamentos(),
+                     onPressed: () => provider.fetchEstados(),
                   )
                 ],
               ),
@@ -76,22 +61,22 @@ class _DepartamentosScreenState extends State<DepartamentosScreen> {
           }
 
           return RefreshIndicator(
-            onRefresh: provider.fetchDepartamentos,
+            onRefresh: provider.fetchEstados,
             child: ListView.builder(
-              padding: const EdgeInsets.all(8.0), // Añadir padding
-              itemCount: provider.departamentos.length,
+              padding: const EdgeInsets.all(8.0),
+              itemCount: provider.estados.length,
               itemBuilder: (context, index) {
-                final depto = provider.departamentos[index];
-                return Card( // Usar Card para un mejor look
+                final estado = provider.estados[index];
+                return Card(
                   margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   child: ListTile(
                     leading: CircleAvatar(
                       backgroundColor: Theme.of(context).colorScheme.primary.withAlpha(26),
                       foregroundColor: Theme.of(context).colorScheme.primary,
-                      child: const Icon(LucideIcons.building2, size: 20),
+                      child: const Icon(LucideIcons.squareCheck, size: 20),
                     ),
-                    title: Text(depto.nombre, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(depto.descripcion ?? 'Sin descripción'),
+                    title: Text(estado.nombre, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(estado.detalle ?? 'Sin detalle'),
                     trailing: canManage
                         ? Row(
                             mainAxisSize: MainAxisSize.min,
@@ -100,14 +85,14 @@ class _DepartamentosScreenState extends State<DepartamentosScreen> {
                                 icon: const Icon(LucideIcons.pencil),
                                 tooltip: 'Editar',
                                 onPressed: () {
-                                  _showDepartamentoDialog(context, provider, departamento: depto);
+                                  _showEstadoDialog(context, provider, estado: estado);
                                 },
                               ),
                               IconButton(
                                 icon: Icon(LucideIcons.trash2, color: Theme.of(context).colorScheme.error),
                                 tooltip: 'Eliminar',
                                 onPressed: () {
-                                  _showDeleteConfirmDialog(context, provider, depto.id);
+                                  _showDeleteConfirmDialog(context, provider, estado.id);
                                 },
                               ),
                             ],
@@ -123,7 +108,7 @@ class _DepartamentosScreenState extends State<DepartamentosScreen> {
       floatingActionButton: canManage
           ? FloatingActionButton(
               onPressed: () {
-                _showDepartamentoDialog(context, Provider.of<DepartamentoProvider>(context, listen: false));
+                _showEstadoDialog(context, Provider.of<EstadosProvider>(context, listen: false));
               },
               backgroundColor: Theme.of(context).colorScheme.primary,
               foregroundColor: Theme.of(context).colorScheme.onPrimary,
@@ -133,21 +118,19 @@ class _DepartamentosScreenState extends State<DepartamentosScreen> {
     );
   }
 
-  // --- Diálogo para Crear/Editar ---
-  void _showDepartamentoDialog(BuildContext context, DepartamentoProvider provider, {Departamento? departamento}) {
-    final isEditing = departamento != null;
-    final nombreController = TextEditingController(text: departamento?.nombre ?? '');
-    final descController = TextEditingController(text: departamento?.descripcion ?? '');
+  void _showEstadoDialog(BuildContext context, EstadosProvider provider, {Estado? estado}) {
+    final isEditing = estado != null;
+    final nombreController = TextEditingController(text: estado?.nombre ?? '');
+    final detalleController = TextEditingController(text: estado?.detalle ?? '');
     final formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
       builder: (context) {
-        // Usar un 'ValueNotifier' para el estado de carga del botón
         final isLoading = ValueNotifier<bool>(false);
         
         return AlertDialog(
-          title: Text(isEditing ? 'Editar Departamento' : 'Nuevo Departamento'),
+          title: Text(isEditing ? 'Editar Estado' : 'Nuevo Estado'),
           content: Form(
             key: formKey,
             child: Column(
@@ -160,9 +143,9 @@ class _DepartamentosScreenState extends State<DepartamentosScreen> {
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: descController,
-                  decoration: const InputDecoration(labelText: 'Descripción (Opcional)'),
-                  maxLines: 3,
+                  controller: detalleController,
+                  decoration: const InputDecoration(labelText: 'Detalle (Opcional)'),
+                  maxLines: 2,
                 ),
               ],
             ),
@@ -172,24 +155,23 @@ class _DepartamentosScreenState extends State<DepartamentosScreen> {
               child: const Text('Cancelar'),
               onPressed: () => Navigator.of(context).pop(),
             ),
-            // Usar ValueListenableBuilder para el botón de guardar
             ValueListenableBuilder<bool>(
               valueListenable: isLoading,
               builder: (context, loading, child) {
                 return ElevatedButton(
                   onPressed: loading ? null : () async {
                     if (formKey.currentState!.validate()) {
-                      isLoading.value = true; // Deshabilitar botón
+                      isLoading.value = true;
                       final nombre = nombreController.text;
-                      final descripcion = descController.text.isNotEmpty ? descController.text : null;
+                      final detalle = detalleController.text.isNotEmpty ? detalleController.text : null;
                       bool success;
                       if (isEditing) {
-                        success = await provider.updateDepartamento(departamento.id, nombre, descripcion);
+                        success = await provider.updateEstado(estado.id, nombre, detalle);
                       } else {
-                        success = await provider.createDepartamento(nombre, descripcion);
+                        success = await provider.createEstado(nombre, detalle);
                       }
                       
-                      isLoading.value = false; // Habilitar botón
+                      isLoading.value = false;
 
                       if (context.mounted) {
                         if (success) {
@@ -212,15 +194,14 @@ class _DepartamentosScreenState extends State<DepartamentosScreen> {
     );
   }
 
-  // --- Diálogo de Confirmación para Borrar ---
-  void _showDeleteConfirmDialog(BuildContext context, DepartamentoProvider provider, String id) {
+  void _showDeleteConfirmDialog(BuildContext context, EstadosProvider provider, String id) {
     showDialog(
       context: context,
       builder: (context) {
         final isLoading = ValueNotifier<bool>(false);
         return AlertDialog(
           title: const Text('Confirmar Eliminación'),
-          content: const Text('¿Estás seguro de que quieres eliminar este departamento?'),
+          content: const Text('¿Estás seguro de que quieres eliminar este estado?'),
           actions: [
             TextButton(
               child: const Text('Cancelar'),
@@ -233,7 +214,7 @@ class _DepartamentosScreenState extends State<DepartamentosScreen> {
                   style: TextButton.styleFrom(foregroundColor: Colors.red),
                   onPressed: loading ? null : () async {
                     isLoading.value = true;
-                    bool success = await provider.deleteDepartamento(id);
+                    bool success = await provider.deleteEstado(id);
                     isLoading.value = false;
                      if (context.mounted) {
                         Navigator.of(context).pop();

@@ -87,12 +87,44 @@ class AppDrawer extends StatelessWidget {
         pageKey: 'departamentos',
       ));
     }
+    if (auth.hasPermission('view_cargo')) {
+      settingsItems.add(_buildDrawerItem(
+        context: context,
+        icon: LucideIcons.briefcase,
+        title: 'Cargos',
+        pageKey: 'cargos',
+      ));
+    }
+    if (auth.hasPermission('view_ubicacion')) {
+      settingsItems.add(_buildDrawerItem(
+        context: context,
+        icon: LucideIcons.mapPin,
+        title: 'Ubicaciones',
+        pageKey: 'ubicaciones',
+      ));
+    }
+    if (auth.hasPermission('view_estadoactivo')) {
+      settingsItems.add(_buildDrawerItem(
+        context: context,
+        icon: LucideIcons.squareCheck,
+        title: 'Estados',
+        pageKey: 'estados',
+      ));
+    }
     if (auth.hasPermission('view_empleado')) {
       settingsItems.add(_buildDrawerItem(
         context: context,
         icon: LucideIcons.users,
         title: 'Empleados',
         pageKey: 'empleados',
+      ));
+    }
+    if (auth.hasPermission('view_suscripcion')) {
+      settingsItems.add(_buildDrawerItem(
+        context: context,
+        icon: LucideIcons.award,
+        title: 'Suscripción',
+        pageKey: 'suscripcion',
       ));
     }
     // ... agregar más items de configuración aquí (roles, permisos, etc.)
