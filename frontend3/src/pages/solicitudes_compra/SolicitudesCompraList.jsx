@@ -86,7 +86,7 @@ export default function SolicitudesCompraList() {
             ]);
             setSolicitudes(solicitudesData.results || solicitudesData || []);
             setDepartamentos(deptosData.results || deptosData || []);
-            setPartidas(partidasData.results || partidasData || []);
+            setPartidas(partidasData.data.results || partidasData.data || []);
         } catch (error) {
             console.error("Error al cargar datos:", error);
             showNotification('Error al cargar los datos', 'error');

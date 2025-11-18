@@ -5,7 +5,8 @@ from django.contrib.auth.models import User
 from .permissions import check_permission, HasPermission
 from .models import *
 from django.db import transaction
-from datetime import timedelta # <-- NUEVA IMPORTACIÓN
+from datetime import timedelta, datetime # <-- datetime AÑADIDO
+import re # <-- re AÑADIDO
 
 class CurrentUserEmpresaDefault:
     requires_context = True
@@ -346,6 +347,31 @@ class RegisterEmpresaSerializer(serializers.Serializer):
             raise serializers.ValidationError("Este nombre de usuario ya está en uso.")
         return value
 
+    def validate_card_number(self, value):
+        if not re.match(r'^\d{16}$', value):
+            raise serializers.ValidationError("El número de tarjeta debe contener exactamente 16 dígitos.")
+        return value
+
+    def validate_card_expiry(self, value):
+        if not re.match(r'^(0[1-9]|1[0-2])\/\d{2}$', value):
+            raise serializers.ValidationError("La fecha de expiración debe tener el formato MM/AA.")
+        
+        try:
+            month, year = value.split('/')
+            # El último día del mes de expiración
+            last_day_of_month = (datetime(2000 + int(year), int(month) + 1, 1) - timedelta(days=1)).day
+            expiry_date = datetime(2000 + int(year), int(month), last_day_of_month)
+            if expiry_date < datetime.now():
+                raise serializers.ValidationError("La tarjeta ha expirado.")
+        except (ValueError, TypeError):
+            raise serializers.ValidationError("Fecha de expiración inválida.")
+        return value
+
+    def validate_card_cvc(self, value):
+        if not re.match(r'^\d{3,4}$', value):
+            raise serializers.ValidationError("El CVC debe contener 3 o 4 dígitos.")
+        return value
+
     @transaction.atomic(using='default')
     def create(self, validated_data):
         try:
@@ -380,8 +406,8 @@ class RegisterEmpresaSerializer(serializers.Serializer):
             # validated_data['plan'] ya contiene el valor correcto ('basico', 'profesional', etc.)
             plan_seleccionado = validated_data['plan']
             limits = {
-                'basico': {'usuarios': 5, 'activos': 50},
-                'profesional': {'usuarios': 20, 'activos': 200},
+                'basico': {'usuarios': 15, 'activos': 100},
+                'profesional': {'usuarios': 40, 'activos': 350},
                 'empresarial': {'usuarios': 9999, 'activos': 99999},
             }
 

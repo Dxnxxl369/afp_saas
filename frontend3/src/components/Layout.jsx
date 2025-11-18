@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
-import Dashboard from './Dashboard';
+import DashboardPage from '../pages/dashboard/DashboardPage';
 import Settings from './Settings';
 import DepartamentosList from '../pages/departamentos/DepartamentosList';
 import ActivosFijosList from '../pages/activos/ActivosFijosList';
@@ -21,6 +21,7 @@ import RevalorizacionPage from '../pages/revalorizacion/RevalorizacionPage';
 import DepreciacionPage from '../pages/depreciacion/DepreciacionPage';
 import SolicitudesCompraList from '../pages/solicitudes_compra/SolicitudesCompraList';
 import OrdenesCompraList from '../pages/ordenes_compra/OrdenesCompraList';
+import SuscripcionPage from '../pages/suscripcion/SuscripcionPage';
 
 export default function Layout() {
   const [currentPage, _setCurrentPage] = useState('dashboard');
@@ -43,7 +44,7 @@ export default function Layout() {
 
     // El resto de las páginas
     const pages = {
-      dashboard: <Dashboard />,
+      dashboard: <DashboardPage />,
       departamentos: <DepartamentosList />,
       activos_fijos: <ActivosFijosList />,
       mantenimientos: <MantenimientoList />,
@@ -60,9 +61,10 @@ export default function Layout() {
       estados: <EstadosList />,
       reportes: <ReportesPage />,
       permisos: <PermisosList />,
+      suscripcion: <SuscripcionPage />,
       settings: <Settings />,
     };
-    return pages[currentPage] || <Dashboard />;
+    return pages[currentPage] || <DashboardPage />;
   };
   
   return (

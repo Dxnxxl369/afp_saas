@@ -12,6 +12,7 @@ from .views import (
     RolesViewSet, LogViewSet, EstadoViewSet, UbicacionViewSet, ProveedorViewSet, PermisosViewSet,
     RegisterEmpresaView, MyTokenObtainPairView, UserPermissionsView, MantenimientoViewSet, SuscripcionViewSet, NotificacionViewSet,
     MyThemePreferencesView, ReporteQueryView, ReporteQueryExportView, RevalorizacionActivoViewSet, DepreciacionActivoViewSet,
+    DashboardDataView,
     SolicitudCompraViewSet, OrdenCompraViewSet, PeriodoPresupuestarioViewSet, PartidaPresupuestariaViewSet, MovimientoPresupuestarioViewSet
 )
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -33,7 +34,7 @@ router.register(r'partidas-presupuestarias', PartidaPresupuestariaViewSet, basen
 router.register(r'movimientos-presupuestarios', MovimientoPresupuestarioViewSet, basename='movimiento-presupuestario')
 # --- [NUEVO] Registrar las nuevas rutas ---
 router.register(r'mantenimientos', MantenimientoViewSet, basename='mantenimiento')
-router.register(r'suscripcion', SuscripcionViewSet, basename='suscripcion')
+router.register(r'suscripciones', SuscripcionViewSet, basename='suscripcion')
 router.register(r'notificaciones', NotificacionViewSet, basename='notificacion')
 router.register(r'revalorizaciones', RevalorizacionActivoViewSet, basename='revalorizacion')
 router.register(r'depreciaciones', DepreciacionActivoViewSet, basename='depreciacion')
@@ -41,6 +42,7 @@ router.register(r'solicitudes-compra', SolicitudCompraViewSet, basename='solicit
 router.register(r'ordenes-compra', OrdenCompraViewSet, basename='orden-compra')
 
 urlpatterns = [
+    path('dashboard/', DashboardDataView.as_view(), name='dashboard_data'),
     ##path('reportes/activos-preview/', ReporteActivosPreview.as_view(), name='reporte_activos_preview'),
     ###path('reportes/activos-export/excel/', ReporteActivosExportExcel.as_view(), name='reporte_activos_export_excel'), # Nueva vista/URL
     ##path('reportes/activos-export/', ReporteActivosExport.as_view(), name='reporte_activos_export'),       

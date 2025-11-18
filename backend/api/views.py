@@ -4,6 +4,7 @@ from rest_framework import permissions
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from .permissions import HasPermission, check_permission
 import io
+import qrcode
 from django.http import HttpResponse, Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -19,7 +20,7 @@ from .serializers import * # Importa todos los serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 import logging
-from django.db.models import Q
+from django.db.models import Q, Sum, Count
 import re
 from datetime import datetime
 from .report_utils import create_excel_report, create_pdf_report
@@ -211,16 +212,21 @@ class BaseTenantLimitViewSet(BaseTenantViewSet):
                 # (Se comprueba ANTES de crear, para notificar en el 90%)
                 threshold = limit * 0.9
                 if (current_count + 1) > threshold and limit < 9999: # No notificar si es "ilimitado"
-                    # Usamos get_or_create para no spamear notificaciones idénticas
-                    Notificacion.objects.get_or_create(
-                        empresa=empresa,
-                        leido=False,
-                        tipo='ADVERTENCIA',
-                        mensaje=f'Estás cerca de tu límite de {self.model_to_count._meta.verbose_name_plural}. '
-                                f'Uso actual: {current_count + 1} de {limit}.'
-                        ,
-                        defaults={'url_destino': '/app/suscripcion'} # URL en el frontend
-                    )
+                    # Obtener un admin de la empresa para enviarle la notificación
+                    admin_user = User.objects.filter(empleado__empresa=empresa, empleado__roles__nombre='Admin').first()
+                    
+                    if admin_user:
+                        model_name = self.model_to_count._meta.verbose_name_plural
+                        mensaje = f"ESTIMADO USUARIO, ESTÁ LLEGANDO AL LÍMITE DE SUS {model_name.upper()} SEGÚN SU PLAN. LO INVITAMOS A MEJORAR DE PLAN."
+                        
+                        # Usamos get_or_create para no spamear notificaciones idénticas
+                        Notificacion.objects.get_or_create(
+                            destinatario=admin_user,
+                            leido=False,
+                            tipo='ADVERTENCIA',
+                            mensaje=mensaje,
+                            defaults={'url_destino': '/app/suscripcion'} # URL en el frontend
+                        )
             
             except Suscripcion.DoesNotExist:
                 return Response(
@@ -307,6 +313,49 @@ class ActivoFijoViewSet(BaseTenantViewSet):
     queryset = ActivoFijo.objects.all()
     serializer_class = ActivoFijoSerializer
     required_manage_permission = 'manage_activofijo'
+
+    #@action(detail=True, methods=['get'])
+    #@action(detail=True, methods=['get'], permission_classes=[AllowAny])
+    #def qr_code(self, request, pk=None):
+    #    activo = self.get_object()
+    #    # URL que se codificará en el QR. Apunta a una ruta que el frontend deberá manejar.
+    #    qr_data = f"/app/activos-fijos/{activo.id}"
+    #    
+    #    # Generar el QR en memoria
+    #    qr_img = qrcode.make(qr_data)
+    #    
+    #    # Guardar la imagen en un buffer de bytes
+    #    buffer = io.BytesIO()
+    #    qr_img.save(buffer, format='PNG')
+    #    
+    #    # Devolver la imagen como una respuesta HTTP
+    #    return HttpResponse(buffer.getvalue(), content_type="image/png")
+    @action(detail=True, methods=['get'], permission_classes=[AllowAny])
+    def qr_code(self, request, pk=None):
+        try:
+            # --- [ CAMBIO ] ---
+            # No usamos self.get_object() porque llama a get_queryset,
+            # el cual falla con AnonymousUser.
+            # Obtenemos el activo directamente por su PK (UUID).
+            activo = ActivoFijo.objects.get(pk=pk)
+            
+        except (ActivoFijo.DoesNotExist, ValueError):
+            # Si el activo no existe o el PK no es un UUID válido, devolvemos un 404
+            return HttpResponse("Activo no encontrado", status=404)
+        # --- [ FIN DEL CAMBIO ] ---
+            
+        # URL que se codificará en el QR.
+        qr_data = f"/app/activos-fijos/{activo.id}"
+        
+        # Generar el QR en memoria
+        qr_img = qrcode.make(qr_data)
+        
+        # Guardar la imagen en un buffer de bytes
+        buffer = io.BytesIO()
+        qr_img.save(buffer, format='PNG')
+        
+        # Devolver la imagen como una respuesta HTTP
+        return HttpResponse(buffer.getvalue(), content_type="image/png")
 
 class RolesViewSet(BaseTenantViewSet):
     queryset = Roles.objects.all()
@@ -425,6 +474,26 @@ class SolicitudCompraViewSet(BaseTenantViewSet):
         solicitud.decision_por = request.user
         solicitud.fecha_decision = timezone.now()
         solicitud.save()
+
+        # --- [NUEVO] Crear notificación para el solicitante ---
+        try:
+            if decision == 'aprobar':
+                tipo_notif = 'INFO'
+                mensaje = f"Tu solicitud de compra para '{solicitud.descripcion}' ha sido APROBADA."
+            else: # 'rechazar'
+                tipo_notif = 'ADVERTENCIA'
+                mensaje = f"Tu solicitud de compra para '{solicitud.descripcion}' fue RECHAZADA."
+
+            Notificacion.objects.create(
+                destinatario=solicitud.solicitante,
+                tipo=tipo_notif,
+                mensaje=mensaje,
+                url_destino='/app/solicitudes-compra' # URL a la que irá el usuario al hacer clic
+            )
+        except Exception as e:
+            # Si la creación de la notificación falla, no debe detener el proceso principal.
+            logger.error(f"Error al crear la notificación para la solicitud {solicitud.id}: {e}")
+        # --- [FIN] ---
 
         serializer = self.get_serializer(solicitud)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -596,24 +665,89 @@ class RegisterEmpresaView(APIView):
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class DashboardDataView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        try:
+            # Determinar la empresa del usuario actual
+            if request.user.is_staff:
+                # Si es superusuario, podría tener una lógica diferente,
+                # como seleccionar una empresa o ver datos agregados de todas.
+                # Por ahora, tomaremos la primera empresa como ejemplo si es necesario.
+                empresa = Empresa.objects.first()
+                if not empresa:
+                    return Response({"detail": "No hay empresas en el sistema."}, status=status.HTTP_404_NOT_FOUND)
+            else:
+                empresa = request.user.empleado.empresa
+        except Empleado.DoesNotExist:
+            return Response({"detail": "El usuario no está asociado a una empresa."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 1. Métricas de Activos y Usuarios
+        activos_qs = ActivoFijo.objects.filter(empresa=empresa)
+        total_activos = activos_qs.count()
+        total_usuarios = Empleado.objects.filter(empresa=empresa).count()
+        valor_total_activos = activos_qs.aggregate(total=Sum('valor_actual'))['total'] or 0
+
+        # 2. Activos por Estado
+        activos_por_estado = list(activos_qs.values('estado__nombre').annotate(count=Count('id')))
+
+        # 3. Activos por Categoría
+        activos_por_categoria = list(activos_qs.values('categoria__nombre').annotate(count=Count('id')))
+
+        # 4. Solicitudes de Compra Pendientes
+        solicitudes_pendientes = SolicitudCompra.objects.filter(empresa=empresa, estado='PENDIENTE').count()
+
+        # 5. Mantenimientos en Proceso
+        mantenimientos_en_proceso = Mantenimiento.objects.filter(empresa=empresa, estado='EN_PROCESO').count()
+
+        # Consolidar todos los datos en una sola respuesta
+        data = {
+            'total_activos': total_activos,
+            'total_usuarios': total_usuarios,
+            'valor_total_activos': valor_total_activos,
+            'activos_por_estado': activos_por_estado,
+            'activos_por_categoria': activos_por_categoria,
+            'solicitudes_pendientes': solicitudes_pendientes,
+            'mantenimientos_en_proceso': mantenimientos_en_proceso,
+        }
+
+        return Response(data)
+
 class UserPermissionsView(APIView):
-    # (Tu vista de permisos está bien)
     permission_classes = [IsAuthenticated]
     def get(self, request, *args, **kwargs):
         permissions_set = set()
         try:
             empleado = request.user.empleado
-            permissions_set = set(
+            # 1. Obtener permisos basados en roles
+            permissions_set.update(
                 empleado.roles.values_list('permisos__nombre', flat=True).distinct()
             )
+            
+            # 2. Añadir permisos basados en la suscripción
+            try:
+                suscripcion = empleado.empresa.suscripcion
+                if suscripcion.plan in ['profesional', 'empresarial']:
+                    permissions_set.add('view_custom_reports')
+                if suscripcion.plan == 'empresarial':
+                    permissions_set.add('view_advanced_reports')
+                    permissions_set.add('has_api_access')
+            except Suscripcion.DoesNotExist:
+                # Si no hay suscripción, no se añaden permisos extra
+                pass
+
+            # 3. Añadir permiso de superusuario si aplica
             if request.user.is_staff:
                  permissions_set.add('is_superuser')
+
         except Empleado.DoesNotExist:
             if request.user.is_staff:
                  permissions_set.add('is_superuser')
             pass 
         except Exception as e:
             print(f"Error fetching user permissions: {e}")
+            
         return Response(list(permissions_set))
 
 class ReporteActivosPreview(APIView):
@@ -821,6 +955,22 @@ class ReporteQueryView(APIView):
             return ActivoFijo.objects.none()
 
     def post(self, request, *args, **kwargs):
+        # --- Comprobación de Suscripción ---
+        try:
+            if not request.user.is_staff:
+                plan = request.user.empleado.empresa.suscripcion.plan
+                if plan == 'basico':
+                    return Response(
+                        {'detail': 'Los reportes personalizables no están incluidos en tu plan Básico.'},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+        except (Empleado.DoesNotExist, Suscripcion.DoesNotExist):
+            return Response(
+                {'detail': 'No se pudo verificar tu plan de suscripción.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        # --- Fin de la Comprobación ---
+
         filters = request.data.get('filters', [])
         if not isinstance(filters, list):
              return Response({"detail": "El campo 'filters' debe ser una lista."}, status=status.HTTP_400_BAD_REQUEST)
@@ -851,6 +1001,22 @@ class ReporteQueryExportView(ReporteQueryView): # Hereda get_base_queryset
     """
     
     def post(self, request, *args, **kwargs):
+        # --- Comprobación de Suscripción ---
+        try:
+            if not request.user.is_staff:
+                plan = request.user.empleado.empresa.suscripcion.plan
+                if plan == 'basico':
+                    return Response(
+                        {'detail': 'La exportación de reportes personalizables no está incluida en tu plan Básico.'},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+        except (Empleado.DoesNotExist, Suscripcion.DoesNotExist):
+            return Response(
+                {'detail': 'No se pudo verificar tu plan de suscripción.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        # --- Fin de la Comprobación ---
+
         filters = request.data.get('filters', [])
         export_format = request.data.get('format', 'pdf').lower()
         
@@ -1177,18 +1343,56 @@ class DepreciacionActivoViewSet(BaseTenantViewSet):
 class SuscripcionViewSet(BaseTenantViewSet):
     """
     ViewSet para que el Admin de la empresa vea su suscripción.
-    Solo permitimos ver (GET), no editar. La edición se haría
-    por un portal de pagos diferente (ej. Stripe).
     """
-    queryset = Suscripcion.objects.all()
+    queryset = Suscripcion.objects.all().order_by('fecha_inicio')
     serializer_class = SuscripcionSerializer
-    required_manage_permission = 'view_suscripcion' # Permiso para ver
-    http_method_names = ['get', 'head', 'options'] # Solo lectura
+    required_manage_permission = 'view_suscripcion' 
+    http_method_names = ['get', 'head', 'options', 'post'] # Habilitar POST para la nueva acción
 
     def get_queryset(self):
         # Sobrescribimos para que solo devuelva LA suscripción de la empresa
         empleado = self.request.user.empleado
         return self.queryset.filter(empresa=empleado.empresa)
+
+    @action(detail=True, methods=['post'], url_path='upgrade-plan')
+    def upgrade_plan(self, request, pk=None):
+        # 1. Comprobar permiso
+        if not check_permission(request, self, 'manage_suscripcion'):
+            self.permission_denied(request, message='Permiso "manage_suscripcion" requerido.')
+
+        suscripcion = self.get_object()
+        new_plan = request.data.get('plan')
+
+        # 2. Validar el nuevo plan
+        if not new_plan or new_plan not in ['profesional', 'empresarial']:
+            return Response({'detail': "Plan inválido. Solo se puede actualizar a 'profesional' o 'empresarial'."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if new_plan == suscripcion.plan:
+            return Response({'detail': 'Ya te encuentras en este plan.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Lógica de negocio: no permitir downgrade
+        plan_order = {'basico': 1, 'profesional': 2, 'empresarial': 3}
+        if plan_order[new_plan] < plan_order[suscripcion.plan]:
+            return Response({'detail': 'No se puede bajar de plan desde esta opción.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 3. Obtener nuevos límites (similar a RegisterEmpresaSerializer)
+        limits = {
+            'profesional': {'usuarios': 40, 'activos': 350},
+            'empresarial': {'usuarios': 9999, 'activos': 99999},
+        }
+        
+        new_limits = limits.get(new_plan)
+
+        # 4. Actualizar y guardar
+        suscripcion.plan = new_plan
+        suscripcion.max_usuarios = new_limits['usuarios']
+        suscripcion.max_activos = new_limits['activos']
+        # Opcional: Extender la fecha de fin, simular pago, etc.
+        # Por ahora, solo cambiamos el plan y los límites.
+        suscripcion.save()
+
+        serializer = self.get_serializer(suscripcion)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class NotificacionViewSet(BaseTenantViewSet):
     """

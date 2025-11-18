@@ -1,86 +1,32 @@
-PS C:\Activos Fijos\sprintespecial-con ia\frontend3> npm run dev
-
-> frontend3@0.0.0 dev
-> vite
-
-
-  VITE v5.4.21  ready in 344 ms
-
-  ➜  Local:   http://localhost:5173/
-  ➜  Network: use --host to expose
-  ➜  press h + enter to show help
-10:14:34 p. m. [vite] Pre-transform error: C:\Activos Fijos\sprintespecial-con ia\frontend3\src\pages\presupuesto\PartidasPresupuestariasList.jsx: Unexpected token, expected "," (198:36)
-
-  196 |                                             );
-  197 |                                         }
-> 198 |                                     })
-      |                                     ^
-  199 |                                 )}
-  200 |                             </tbody>
-  201 |                         </table>
-10:14:34 p. m. [vite] Internal server error: C:\Activos Fijos\sprintespecial-con ia\frontend3\src\pages\presupuesto\PartidasPresupuestariasList.jsx: Unexpected token, expected "," (198:36)
-
-  196 |                                             );
-  197 |                                         }
-> 198 |                                     })
-      |                                     ^
-  199 |                                 )}
-  200 |                             </tbody>
-  201 |                         </table>
-  Plugin: vite:react-babel
-  File: C:/Activos Fijos/sprintespecial-con ia/frontend3/src/pages/presupuesto/PartidasPresupuestariasList.jsx:198:36
-  196|                                              );
-  197|                                          }
-  198|                                      })
-     |                                      ^
-  199|                                  )}
-  200|                              </tbody>
-      at constructor (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:367:19)
-      at JSXParserMixin.raise (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:6624:19)
-      at JSXParserMixin.unexpected (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:6644:16)
-      at JSXParserMixin.expect (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:6924:12)
-      at JSXParserMixin.parseCallExpressionArguments (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:11307:14)
-      at JSXParserMixin.parseCoverCallAndAsyncArrowHead (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:11250:29)
-      at JSXParserMixin.parseSubscript (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:11184:19)    
-      at JSXParserMixin.parseSubscripts (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:11158:19)   
-      at JSXParserMixin.parseExprSubscripts (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:11149:17)
-      at JSXParserMixin.parseUpdate (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:11130:21)       
-      at JSXParserMixin.parseMaybeUnary (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:11110:23)   
-      at JSXParserMixin.parseMaybeUnaryOrPrivate (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10963:61)
-      at JSXParserMixin.parseExprOps (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10968:23)      
-      at JSXParserMixin.parseMaybeConditional (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10945:23)
-      at JSXParserMixin.parseMaybeAssign (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10895:21)  
-      at C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10864:39
-      at JSXParserMixin.allowInAnd (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:12500:12)        
-      at JSXParserMixin.parseMaybeAssignAllowIn (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10864:17)
-      at JSXParserMixin.parseMaybeAssignAllowInOrVoidPattern (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:12567:17)
-      at JSXParserMixin.parseParenAndDistinguishExpression (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:11747:28)
-      at JSXParserMixin.parseExprAtom (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:11395:23)     
-      at JSXParserMixin.parseExprAtom (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:4793:20)      
-      at JSXParserMixin.parseExprSubscripts (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:11145:23)
-      at JSXParserMixin.parseUpdate (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:11130:21)       
-      at JSXParserMixin.parseMaybeUnary (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:11110:23)   
-      at JSXParserMixin.parseMaybeUnaryOrPrivate (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10963:61)
-      at JSXParserMixin.parseExprOps (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10968:23)      
-      at JSXParserMixin.parseMaybeConditional (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10945:23)
-      at JSXParserMixin.parseMaybeAssign (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10895:21)  
-      at JSXParserMixin.parseConditional (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10957:29)  
-      at JSXParserMixin.parseMaybeConditional (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10949:17)
-      at JSXParserMixin.parseMaybeAssign (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10895:21)  
-      at JSXParserMixin.parseConditional (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10957:29)  
-      at JSXParserMixin.parseMaybeConditional (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10949:17)
-      at JSXParserMixin.parseMaybeAssign (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10895:21)  
-      at JSXParserMixin.parseExpressionBase (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10848:23)
-      at C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10844:39
-      at JSXParserMixin.allowInAnd (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:12500:12)        
-      at JSXParserMixin.parseExpression (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:10844:17)   
-      at JSXParserMixin.jsxParseExpressionContainer (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:4661:31)
-      at JSXParserMixin.jsxParseElementAt (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:4740:36)  
-      at JSXParserMixin.jsxParseElementAt (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:4727:32)  
-      at JSXParserMixin.jsxParseElementAt (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:4727:32)  
-      at JSXParserMixin.jsxParseElementAt (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:4727:32)  
-      at JSXParserMixin.jsxParseElementAt (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:4727:32)  
-      at JSXParserMixin.jsxParseElementAt (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:4727:32)  
-      at JSXParserMixin.jsxParseElement (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:4778:17)    
-      at JSXParserMixin.parseExprAtom (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:4788:19)      
-      at JSXParserMixin.parseExprSubscripts (C:\Activos Fijos\sprintespecial-con ia\frontend3\node_modules\@babel\parser\lib\index.js:11145:23)
+(venv) PS C:\Activos Fijos\sprintespecial-con ia\backend> py -3.11-64 manage.py runserver 0.0.0.0:8000
+Watching for file changes with StatReloader
+Exception in thread django-main-thread:
+Traceback (most recent call last):
+  File "C:\Users\HP\AppData\Local\Programs\Python\Python311\Lib\threading.py", line 1045, in _bootstrap_inner
+    self.run()
+  File "C:\Users\HP\AppData\Local\Programs\Python\Python311\Lib\threading.py", line 982, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\HP\AppData\Local\Programs\Python\Python311\Lib\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+  File "C:\Users\HP\AppData\Local\Programs\Python\Python311\Lib\site-packages\django\core\management\commands\runserver.py", line 124, in inner_run
+    autoreload.raise_last_exception()
+  File "C:\Users\HP\AppData\Local\Programs\Python\Python311\Lib\site-packages\django\utils\autoreload.py", line 86, in raise_last_exception
+    raise _exception[1]
+  File "C:\Users\HP\AppData\Local\Programs\Python\Python311\Lib\site-packages\django\core\management\__init__.py", line 394, in execute
+    autoreload.check_errors(django.setup)()
+  File "C:\Users\HP\AppData\Local\Programs\Python\Python311\Lib\site-packages\django\utils\autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+  File "C:\Users\HP\AppData\Local\Programs\Python\Python311\Lib\site-packages\django\__init__.py", line 24, in setup
+    apps.populate(settings.INSTALLED_APPS)
+  File "C:\Users\HP\AppData\Local\Programs\Python\Python311\Lib\site-packages\django\apps\registry.py", line 91, in populate
+    app_config = AppConfig.create(entry)
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\AppData\Local\Programs\Python\Python311\Lib\site-packages\django\apps\config.py", line 193, in create
+    import_module(entry)
+  File "C:\Users\HP\AppData\Local\Programs\Python\Python311\Lib\importlib\__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1140, in _find_and_load_unlocked
+ModuleNotFoundError: No module named 'rest_framework_simplejwt'

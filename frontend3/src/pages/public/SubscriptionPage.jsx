@@ -7,7 +7,7 @@ const plans = [
     {
         name: 'Básico',
         price: '10',
-        features: ['Hasta 5 usuarios', 'Hasta 50 activos', 'Todos los módulos', 'Soporte por email'],
+        features: ['Hasta 15 usuarios', 'Hasta 100 activos', 'Todos los módulos', 'Soporte por email'],
         borderColor: 'border-cyan-500',
         shadowColor: 'shadow-cyan-500/50',
         buttonClass: 'bg-cyan-500 hover:bg-cyan-600',
@@ -15,7 +15,7 @@ const plans = [
     {
         name: 'Profesional',
         price: '25',
-        features: ['Hasta 20 usuarios', 'Hasta 200 activos', 'Reportes personalizables', 'Soporte prioritario'],
+        features: ['Hasta 40 usuarios', 'Hasta 350 activos', 'Reportes personalizables', 'Soporte prioritario'],
         borderColor: 'border-indigo-500',
         shadowColor: 'shadow-indigo-500/50',
         buttonClass: 'bg-indigo-500 hover:bg-indigo-600',

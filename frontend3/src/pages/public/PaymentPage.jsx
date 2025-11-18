@@ -35,6 +35,28 @@ export default function PaymentPage() {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const handlePaymentChange = (e) => {
+        let { name, value } = e.target;
+        let formattedValue = value;
+
+        if (name === 'card_number') {
+            // Eliminar no dígitos y limitar a 16
+            formattedValue = value.replace(/\D/g, '').slice(0, 16);
+        } else if (name === 'card_expiry') {
+            // Eliminar no dígitos y limitar a 4
+            formattedValue = value.replace(/\D/g, '').slice(0, 4);
+            // Añadir / después de los primeros 2 dígitos
+            if (formattedValue.length > 2) {
+                formattedValue = `${formattedValue.slice(0, 2)}/${formattedValue.slice(2)}`;
+            }
+        } else if (name === 'card_cvc') {
+            // Eliminar no dígitos y limitar a 4
+            formattedValue = value.replace(/\D/g, '').slice(0, 4);
+        }
+
+        setFormData(prev => ({ ...prev, [name]: formattedValue }));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -116,9 +138,36 @@ export default function PaymentPage() {
                     <fieldset className="border border-theme rounded-lg p-4">
                         <legend className="text-sm font-medium text-accent px-2 flex items-center gap-2"><CreditCard size={16} /> Datos de Pago</legend>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <FormInput label="Número de Tarjeta" name="card_number" value={formData.card_number} onChange={handleChange} placeholder="0000 0000 0000 0000" required className="md:col-span-3" />
-                            <FormInput label="Expiración (MM/AA)" name="card_expiry" value={formData.card_expiry} onChange={handleChange} placeholder="12/28" required />
-                            <FormInput label="CVC" name="card_cvc" value={formData.card_cvc} onChange={handleChange} placeholder="123" required />
+                            <FormInput 
+                                label="Número de Tarjeta" 
+                                name="card_number" 
+                                value={formData.card_number} 
+                                onChange={handlePaymentChange} 
+                                placeholder="0000 0000 0000 0000" 
+                                required 
+                                className="md:col-span-3"
+                                maxLength="16"
+                                inputMode="numeric"
+                            />
+                            <FormInput 
+                                label="Expiración (MM/AA)" 
+                                name="card_expiry" 
+                                value={formData.card_expiry} 
+                                onChange={handlePaymentChange} 
+                                placeholder="12/28" 
+                                required 
+                                maxLength="5"
+                            />
+                            <FormInput 
+                                label="CVC" 
+                                name="card_cvc" 
+                                value={formData.card_cvc} 
+                                onChange={handlePaymentChange} 
+                                placeholder="123" 
+                                required 
+                                maxLength="4"
+                                inputMode="numeric"
+                            />
                         </div>
                     </fieldset>
 

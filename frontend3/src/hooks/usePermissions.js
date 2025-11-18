@@ -192,6 +192,7 @@ const moduleViewPermissions = {
     'depreciaciones': 'view_depreciacion',
     'solicitudes_compra': 'view_solicitud_compra',
     'ordenes_compra': 'view_orden_compra',
+    'suscripcion': 'view_suscripcion',
 };
 // --- End Sidebar Mapping ---
 
