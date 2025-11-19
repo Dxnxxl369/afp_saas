@@ -32,7 +32,8 @@ class CargosProvider with ChangeNotifier {
 
   Future<bool> createCargo(String nombre, String? descripcion) async {
     try {
-      final nuevoCargo = await _apiService.createCargo(nombre, descripcion);
+      final data = {'nombre': nombre, 'descripcion': descripcion};
+      final nuevoCargo = await _apiService.createCargo(data);
       _cargos.add(nuevoCargo);
       notifyListeners();
       return true;
@@ -45,7 +46,8 @@ class CargosProvider with ChangeNotifier {
 
   Future<bool> updateCargo(String id, String nombre, String? descripcion) async {
      try {
-      final cargoActualizado = await _apiService.updateCargo(id, nombre, descripcion);
+      final data = {'nombre': nombre, 'descripcion': descripcion};
+      final cargoActualizado = await _apiService.updateCargo(id, data);
       final index = _cargos.indexWhere((d) => d.id == id);
       if (index != -1) {
         _cargos[index] = cargoActualizado;

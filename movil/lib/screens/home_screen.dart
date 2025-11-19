@@ -23,6 +23,9 @@ import 'empleados/empleados_screen.dart';
 import 'dashboard/dashboard_screen.dart';
 import 'proveedores/proveedores_screen.dart';
 import 'categorias_activo/categorias_activo_screen.dart';
+import 'disposicion/disposicion_screen.dart';
+import 'depreciacion/depreciacion_screen.dart';
+import 'revalorizacion/revalorizacion_screen.dart';
 
 // Convertimos HomeScreen a StatefulWidget para manejar la página seleccionada
 class HomeScreen extends StatefulWidget {
@@ -62,6 +65,9 @@ class _HomeScreenState extends State<HomeScreen> {
     'proveedores': const ProveedoresScreen(),
     'categorias_activo': const CategoriasActivoScreen(),
     'suscripcion': const SuscripcionScreen(),
+    'disposicion': const DisposicionScreen(),
+    'depreciacion': const DepreciacionScreen(),
+    'revalorizacion': const RevalorizacionScreen(),
     // ... (Añadir otras pantallas de módulos aquí) ...
   };
   
@@ -168,6 +174,9 @@ class _HomeScreenState extends State<HomeScreen> {
       case 'proveedores': return 'Proveedores';
       case 'categorias_activo': return 'Categorías de Activo';
       case 'suscripcion': return 'Suscripción';
+      case 'disposicion': return 'Disposición de Activos';
+      case 'depreciacion': return 'Depreciación de Activos';
+      case 'revalorizacion': return 'Revalorización de Activos';
       // ... (añadir otros) ...
       default: return 'ActFijo App';
     }

@@ -1,4 +1,4 @@
-import 'package:activos_fijos/features/activos_fijos/domain/models/activo_fijo.dart';
+import '../models/activo_fijo.dart';
 
 class Disposicion {
   final String id;

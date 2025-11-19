@@ -1,5 +1,6 @@
-import 'package:activos_fijos/features/activos_fijos/domain/models/activo_fijo.dart';
-import 'package:activos_fijos/features/auth/domain/models/user.dart';
+import '../models/activo_fijo.dart';
+import '../models/user.dart';
+import '../models/user.dart';
 
 class Depreciacion {
   final String id;

@@ -625,6 +625,7 @@ class PermisosViewSet(viewsets.ModelViewSet):
     """
     queryset = Permisos.objects.all().order_by('nombre')
     serializer_class = PermisosSerializer
+    pagination_class = None
     
     def get_permissions(self):
         # ... (permission logic) ...
@@ -1141,16 +1142,16 @@ class ReporteQueryExportView(ReporteQueryView): # Hereda get_base_queryset
             logger.error(f"Report Query Export Error: {e}", exc_info=True)
             return Response({"detail": f"Error al exportar: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
                 
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.db import transaction
 
 class MantenimientoViewSet(BaseTenantViewSet):
     queryset = Mantenimiento.objects.all().select_related('activo', 'empleado_asignado__usuario').prefetch_related('fotos') # Optimizar query
     serializer_class = MantenimientoSerializer
     required_manage_permission = 'manage_mantenimiento'
-    parser_classes = (MultiPartParser, FormParser) # Añadir parsers para subida de archivos
+    parser_classes = (JSONParser, MultiPartParser, FormParser) # Añadir parsers para subida de archivos
 
-    @action(detail=True, methods=['post'], url_path='actualizar-estado')
+    @action(detail=True, methods=['patch'], url_path='actualizar-estado')
     def actualizar_estado(self, request, pk=None):
         """
         Permite al empleado asignado actualizar estado, notas y subir fotos de solución.

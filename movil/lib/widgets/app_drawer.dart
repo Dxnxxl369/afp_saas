@@ -51,15 +51,55 @@ class AppDrawer extends StatelessWidget {
       ));
     }
 
-    // 3. Módulos Principales
-    if (auth.hasPermission('view_activo')) {
-       menuItems.add(_buildDrawerItem(
+    // 3. Módulos Principales (con agrupación)
+    List<Widget> gestionActivosItems = [];
+    if (auth.hasPermission('view_activofijo')) {
+      gestionActivosItems.add(_buildDrawerItem(
         context: context,
         icon: LucideIcons.scan,
-        title: 'Activos Fijos',
+        title: 'Lista de Activos',
         pageKey: 'activos_fijos',
+        isSubItem: true,
       ));
     }
+    if (auth.hasPermission('view_revalorizacion')) {
+      gestionActivosItems.add(_buildDrawerItem(
+        context: context,
+        icon: LucideIcons.trendingUp,
+        title: 'Revalorización',
+        pageKey: 'revalorizacion',
+        isSubItem: true,
+      ));
+    }
+    if (auth.hasPermission('view_depreciacion')) {
+      gestionActivosItems.add(_buildDrawerItem(
+        context: context,
+        icon: LucideIcons.trendingDown,
+        title: 'Depreciación',
+        pageKey: 'depreciacion',
+        isSubItem: true,
+      ));
+    }
+    if (auth.hasPermission('view_disposicion')) {
+      gestionActivosItems.add(_buildDrawerItem(
+        context: context,
+        icon: LucideIcons.archive,
+        title: 'Disposición',
+        pageKey: 'disposicion',
+        isSubItem: true,
+      ));
+    }
+    
+    if (gestionActivosItems.isNotEmpty) {
+      menuItems.add(
+        ExpansionTile(
+          leading: const Icon(LucideIcons.box),
+          title: const Text('Gestión de Activos'),
+          children: gestionActivosItems,
+        )
+      );
+    }
+    
     if (auth.hasPermission('view_presupuesto')) {
        menuItems.add(_buildDrawerItem(
         context: context,
@@ -192,9 +232,11 @@ class AppDrawer extends StatelessWidget {
     required IconData icon,
     required String title,
     required String pageKey,
+    bool isSubItem = false,
   }) {
     final bool isSelected = selectedPageKey == pageKey;
     return ListTile(
+      contentPadding: isSubItem ? const EdgeInsets.only(left: 32.0) : null,
       leading: Icon(icon, color: isSelected ? Theme.of(context).colorScheme.primary : null),
       title: Text(
         title,

@@ -44,6 +44,10 @@ router.register(r'disposiciones', DisposicionActivoViewSet, basename='disposicio
 router.register(r'solicitudes-compra', SolicitudCompraViewSet, basename='solicitud-compra')
 router.register(r'ordenes-compra', OrdenCompraViewSet, basename='orden-compra')
 
+print("DEBUG: DRF Router URLs:")
+for url in router.urls:
+    print(f"  {url.pattern}")
+
 urlpatterns = [
     path('dashboard/', DashboardDataView.as_view(), name='dashboard_data'),
     ##path('reportes/activos-preview/', ReporteActivosPreview.as_view(), name='reporte_activos_preview'),

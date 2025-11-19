@@ -34,7 +34,8 @@ class DepartamentoProvider with ChangeNotifier {
 
   Future<bool> createDepartamento(String nombre, String? descripcion) async {
     try {
-      final nuevoDepto = await _apiService.createDepartamento(nombre, descripcion);
+      final data = {'nombre': nombre, 'descripcion': descripcion};
+      final nuevoDepto = await _apiService.createDepartamento(data);
       _departamentos.add(nuevoDepto);
       notifyListeners();
       return true;
@@ -47,7 +48,8 @@ class DepartamentoProvider with ChangeNotifier {
 
   Future<bool> updateDepartamento(String id, String nombre, String? descripcion) async {
      try {
-      final deptoActualizado = await _apiService.updateDepartamento(id, nombre, descripcion);
+      final data = {'nombre': nombre, 'descripcion': descripcion};
+      final deptoActualizado = await _apiService.updateDepartamento(id, data);
       final index = _departamentos.indexWhere((d) => d.id == id);
       if (index != -1) {
         _departamentos[index] = deptoActualizado;

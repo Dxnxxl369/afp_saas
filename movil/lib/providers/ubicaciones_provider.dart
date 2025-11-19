@@ -32,7 +32,8 @@ class UbicacionesProvider with ChangeNotifier {
 
   Future<bool> createUbicacion(String nombre, String? direccion, String? detalle) async {
     try {
-      final nuevaUbicacion = await _apiService.createUbicacion(nombre, direccion, detalle);
+      final data = {'nombre': nombre, 'direccion': direccion, 'detalle': detalle};
+      final nuevaUbicacion = await _apiService.createUbicacion(data);
       _ubicaciones.add(nuevaUbicacion);
       notifyListeners();
       return true;
@@ -45,7 +46,8 @@ class UbicacionesProvider with ChangeNotifier {
 
   Future<bool> updateUbicacion(String id, String nombre, String? direccion, String? detalle) async {
      try {
-      final ubicacionActualizada = await _apiService.updateUbicacion(id, nombre, direccion, detalle);
+      final data = {'nombre': nombre, 'direccion': direccion, 'detalle': detalle};
+      final ubicacionActualizada = await _apiService.updateUbicacion(id, data);
       final index = _ubicaciones.indexWhere((d) => d.id == id);
       if (index != -1) {
         _ubicaciones[index] = ubicacionActualizada;

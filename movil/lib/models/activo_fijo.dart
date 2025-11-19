@@ -1,4 +1,5 @@
 // movil/lib/models/activo_fijo.dart
+import 'estado.dart'; // Importar el modelo Estado
 
 class ActivoFijo {
   final String id;
@@ -6,22 +7,21 @@ class ActivoFijo {
   final String codigoInterno;
   final DateTime fechaAdquisicion;
   final double valorActual;
-  final int vidaUtil; // Nuevo
+  final int vidaUtil;
   
-  final String? departamentoId; // Nuevo
+  final String? departamentoId;
   final String? departamentoNombre;
   
-  final String categoriaId; // Nuevo
+  final String categoriaId;
   final String categoriaNombre;
   
-  final String estadoId; // Nuevo
-  final String estadoNombre;
+  final Estado estado; // Usamos el objeto Estado anidado
   
-  final String ubicacionId; // Nuevo
-  final String? ubicacionNombre; // Nuevo
+  final String ubicacionId;
+  final String? ubicacionNombre;
   
-  final String? proveedorId; // Nuevo
-  final String? proveedorNombre; // Nuevo
+  final String? proveedorId;
+  final String? proveedorNombre;
   
   final String? fotoActivoUrl;
 
@@ -31,22 +31,21 @@ class ActivoFijo {
     required this.codigoInterno,
     required this.fechaAdquisicion,
     required this.valorActual,
-    required this.vidaUtil, // Nuevo
+    required this.vidaUtil,
     
-    this.departamentoId, // Nuevo
+    this.departamentoId,
     this.departamentoNombre,
     
-    required this.categoriaId, // Nuevo
+    required this.categoriaId,
     required this.categoriaNombre,
     
-    required this.estadoId, // Nuevo
-    required this.estadoNombre,
+    required this.estado, // Requerimos el objeto Estado
     
-    required this.ubicacionId, // Nuevo
-    this.ubicacionNombre, // Nuevo
+    required this.ubicacionId,
+    this.ubicacionNombre,
     
-    this.proveedorId, // Nuevo
-    this.proveedorNombre, // Nuevo
+    this.proveedorId,
+    this.proveedorNombre,
     
     this.fotoActivoUrl,
   });
@@ -57,23 +56,22 @@ class ActivoFijo {
       nombre: json['nombre'],
       codigoInterno: json['codigo_interno'],
       fechaAdquisicion: DateTime.parse(json['fecha_adquisicion']),
-      valorActual: (json['valor_actual'] as num).toDouble(),
-      vidaUtil: json['vida_util'], // Nuevo
+      valorActual: (json['valor_actual'] is String ? double.parse(json['valor_actual']) : json['valor_actual']).toDouble(),
+      vidaUtil: (json['vida_util'] is String ? int.parse(json['vida_util']) : json['vida_util']),
       
-      departamentoId: json['departamento'], // Nuevo
+      departamentoId: json['departamento'],
       departamentoNombre: json['departamento_detail']?['nombre'],
       
-      categoriaId: json['categoria'], // Nuevo
+      categoriaId: json['categoria'],
       categoriaNombre: json['categoria_detail']?['nombre'] ?? 'Sin categoría',
       
-      estadoId: json['estado'], // Nuevo
-      estadoNombre: json['estado_detail']?['nombre'] ?? 'Sin estado',
+      estado: Estado.fromJson(json['estado_detail']), // Parsear el objeto Estado
       
-      ubicacionId: json['ubicacion'], // Nuevo
-      ubicacionNombre: json['ubicacion_detail']?['nombre'], // Nuevo
+      ubicacionId: json['ubicacion'],
+      ubicacionNombre: json['ubicacion_detail']?['nombre'],
       
-      proveedorId: json['proveedor'], // Nuevo
-      proveedorNombre: json['proveedor_detail']?['nombre'], // Nuevo
+      proveedorId: json['proveedor'],
+      proveedorNombre: json['proveedor_detail']?['nombre'],
       
       fotoActivoUrl: json['foto_activo'],
     );

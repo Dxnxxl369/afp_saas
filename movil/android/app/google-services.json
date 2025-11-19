@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1083949969226",
+    "project_id": "actfijopresupuesto",
+    "storage_bucket": "actfijopresupuesto.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1083949969226:android:ac5987ca7d8b76b08edbb3",
+        "android_client_info": {
+          "package_name": "com.example.movil2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB54nqUs1ABUR3tyf5dNuCNw_duHDEtLTY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

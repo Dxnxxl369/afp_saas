@@ -114,27 +114,26 @@ class _ActivosScreenState extends State<ActivosScreen> {
                                 : const Center(child: Icon(LucideIcons.image, size: 30, color: Colors.grey)),
                           ),
                           const SizedBox(width: 12),
-                          // Detalles del Activo
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  activo.nombre,
-                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 4),
-                                Text('Código: ${activo.codigoInterno}', style: Theme.of(context).textTheme.bodySmall),
-                                Text('Valor: \$${NumberFormat('#,##0.00').format(activo.valorActual)}', style: Theme.of(context).textTheme.bodySmall),
-                                Text('Estado: ${activo.estadoNombre}', style: Theme.of(context).textTheme.bodySmall),
-                                if (activo.departamentoNombre != null)
-                                  Text('Dpto: ${activo.departamentoNombre}', style: Theme.of(context).textTheme.bodySmall),
-                              ],
-                            ),
-                          ),
-                          // Acciones (Editar/Eliminar)
+                                    // Detalles del Activo
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            activo.nombre,
+                                            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text('Código: ${activo.codigoInterno}', style: Theme.of(context).textTheme.bodySmall),
+                                          Text('Valor: \$${NumberFormat('#,##0.00').format(activo.valorActual)}', style: Theme.of(context).textTheme.bodySmall),
+                                          Text('Estado: ${activo.estado.nombre}', style: Theme.of(context).textTheme.bodySmall),
+                                          if (activo.departamentoNombre != null)
+                                            Text('Dpto: ${activo.departamentoNombre}', style: Theme.of(context).textTheme.bodySmall),
+                                        ],
+                                      ),
+                                    ),                          // Acciones (Editar/Eliminar)
                           if (canManage)
                             Row(
                               mainAxisSize: MainAxisSize.min,
@@ -191,7 +190,7 @@ class _ActivosScreenState extends State<ActivosScreen> {
 
     String? selectedDepartamentoId = activo?.departamentoId;
     String? selectedCategoriaId = activo?.categoriaId;
-    String? selectedEstadoId = activo?.estadoId;
+    String? selectedEstadoId = activo?.estado?.id;
     String? selectedUbicacionId = activo?.ubicacionId;
     String? selectedProveedorId = activo?.proveedorId;
 
@@ -577,7 +576,7 @@ class _ActivosScreenState extends State<ActivosScreen> {
                 _buildDetailRow('Vida Útil:', '${activo.vidaUtil} años'),
                 if (activo.departamentoNombre != null) _buildDetailRow('Departamento:', activo.departamentoNombre!),
                 _buildDetailRow('Categoría:', activo.categoriaNombre),
-                _buildDetailRow('Estado:', activo.estadoNombre),
+                _buildDetailRow('Estado:', activo.estado.nombre),
                 if (activo.ubicacionNombre != null) _buildDetailRow('Ubicación:', activo.ubicacionNombre!),
                 if (activo.proveedorNombre != null) _buildDetailRow('Proveedor:', activo.proveedorNombre!),
                 const SizedBox(height: 16),

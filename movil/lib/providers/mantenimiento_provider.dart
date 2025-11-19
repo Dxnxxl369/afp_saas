@@ -77,7 +77,8 @@ class MantenimientoProvider with ChangeNotifier {
     _loadingState = LoadingState.loading;
     notifyListeners();
     try {
-      final mantenimientoActualizado = await _apiService.actualizarEstadoMantenimiento(id, estado, notas, fotosSolucion);
+      final data = {'estado': estado, if (notas != null) 'notas': notas};
+      final mantenimientoActualizado = await _apiService.actualizarEstadoMantenimiento(id, data, fotosSolucion);
       final index = _mantenimientos.indexWhere((m) => m.id == id);
       if (index != -1) {
         _mantenimientos[index] = mantenimientoActualizado;

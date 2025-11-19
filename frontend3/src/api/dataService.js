@@ -707,15 +707,33 @@ export const getMantenimientos = async () => {
     return response.data;
 };
 
-export const createMantenimiento = async (data) => {
-    const response = await apiClient.post('/mantenimientos/', data);
+export const createMantenimiento = async (data, fotoSolucion) => {
+    const formData = new FormData();
+    for (const key in data) {
+        formData.append(key, data[key]);
+    }
+    if (fotoSolucion) {
+        formData.append('foto_solucion', fotoSolucion);
+    }
+    const response = await apiClient.post('/mantenimientos/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
     // Log DESPUÉS de éxito
-    await logAction('CREATE: Mantenimiento', { id_creado: response.data.id, activo_id: data.activo, tipo: data.tipo });
+    await logAction('CREATE: Mantenimiento', { id_creado: response.data.id, activo_id: data.activo_id, tipo: data.tipo });
     return response.data;
 };
 
-export const updateMantenimiento = async (id, data) => {
-    const response = await apiClient.patch(`/mantenimientos/${id}/`, data);
+export const updateMantenimiento = async (id, data, fotoSolucion) => {
+    const formData = new FormData();
+    for (const key in data) {
+        formData.append(key, data[key]);
+    }
+    if (fotoSolucion) {
+        formData.append('foto_solucion', fotoSolucion);
+    }
+    const response = await apiClient.patch(`/mantenimientos/${id}/`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
     // Log DESPUÉS de éxito
     await logAction('UPDATE: Mantenimiento', { id: id, ...data });
     return response.data;
@@ -729,7 +747,7 @@ export const deleteMantenimiento = async (id) => {
 
 export const actualizarEstadoMantenimiento = async (id, data) => {
     // data debe ser { estado: 'NUEVO_ESTADO', notas_solucion: 'NUEVAS_NOTAS' }
-    const response = await apiClient.patch(`/mantenimientos/${id}/actualizar_estado/`, data);
+    const response = await apiClient.patch(`/mantenimientos/${id}/actualizar-estado/`, data);
     await logAction('UPDATE_STATUS: Mantenimiento', { id: id, ...data });
     return response.data;
 };

@@ -19,6 +19,9 @@ import 'providers/suscripcion_provider.dart';
 import 'providers/dashboard_provider.dart';
 import 'providers/proveedor_provider.dart';
 import 'providers/categoria_activo_provider.dart';
+import 'providers/revalorizacion_provider.dart';
+import 'providers/depreciacion_provider.dart';
+import 'providers/disposicion_provider.dart';
 
 // Importar Pantallas
 import 'screens/home_screen.dart'; // <-- Archivo que te faltaba
@@ -70,6 +73,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
         ChangeNotifierProvider(create: (_) => ProveedorProvider()),
         ChangeNotifierProvider(create: (_) => CategoriaActivoProvider()),
+        ChangeNotifierProvider(create: (_) => RevalorizacionProvider()),
+        ChangeNotifierProvider(create: (_) => DepreciacionProvider()),
+        ChangeNotifierProvider(create: (_) => DisposicionProvider()),
         // (Añadir más providers de módulos aquí)
       ],
       child: Consumer<ThemeProvider>(

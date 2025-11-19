@@ -32,7 +32,8 @@ class EstadosProvider with ChangeNotifier {
 
   Future<bool> createEstado(String nombre, String? detalle) async {
     try {
-      final nuevoEstado = await _apiService.createEstado(nombre, detalle);
+      final data = {'nombre': nombre, 'detalle': detalle};
+      final nuevoEstado = await _apiService.createEstado(data);
       _estados.add(nuevoEstado);
       notifyListeners();
       return true;
@@ -45,7 +46,8 @@ class EstadosProvider with ChangeNotifier {
 
   Future<bool> updateEstado(String id, String nombre, String? detalle) async {
      try {
-      final estadoActualizado = await _apiService.updateEstado(id, nombre, detalle);
+      final data = {'nombre': nombre, 'detalle': detalle};
+      final estadoActualizado = await _apiService.updateEstado(id, data);
       final index = _estados.indexWhere((d) => d.id == id);
       if (index != -1) {
         _estados[index] = estadoActualizado;

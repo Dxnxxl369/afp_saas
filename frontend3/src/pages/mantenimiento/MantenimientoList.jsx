@@ -81,6 +81,10 @@ const MantenimientoForm = ({ mantenimiento, onSave, onCancel }) => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleFileChange = (e) => {
+        setFormData(prev => ({ ...prev, foto_solucion: e.target.files[0] }));
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
         let dataToSave = { ...formData };
@@ -99,7 +103,7 @@ const MantenimientoForm = ({ mantenimiento, onSave, onCancel }) => {
             notas_solucion: dataToSave.notas_solucion,
             costo: dataToSave.costo,
         };
-        onSave(finalData); // Enviar solo los datos necesarios para POST/PATCH
+        onSave(finalData, formData.foto_solucion); // Enviar solo los datos necesarios para POST/PATCH + la foto
     };
 
     if (loadingDeps) {
@@ -134,6 +138,11 @@ const MantenimientoForm = ({ mantenimiento, onSave, onCancel }) => {
             <FormTextArea name="descripcion_problema" label="Descripción del Problema/Tarea" value={formData.descripcion_problema} onChange={handleChange} required />
             <FormTextArea name="notas_solucion" label="Notas de Solución (Opcional)" value={formData.notas_solucion} onChange={handleChange} />
             <FormInput name="costo" label="Costo (Bs.)" type="number" step="0.01" min="0" value={formData.costo} onChange={handleChange} />
+            
+            <div className="flex flex-col">
+                <label className="text-sm font-medium text-secondary mb-1.5">Foto de Solución (Opcional)</label>
+                <input type="file" name="foto_solucion" accept="image/*" onChange={handleFileChange} className="w-full p-3 bg-tertiary rounded-lg text-primary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-accent file:text-white hover:file:bg-opacity-90 cursor-pointer" />
+            </div>
             
             <div className="flex justify-end gap-3 pt-4 border-t border-theme">
                 <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg text-primary hover:bg-tertiary">Cancelar</button>
@@ -217,13 +226,13 @@ export default function MantenimientoList() {
 
     useEffect(() => { fetchMantenimientos(); }, []);
 
-    const handleSave = async (data) => {
+    const handleSave = async (data, fotoSolucion) => {
         try {
             if (editingMantenimiento) {
-                await updateMantenimiento(editingMantenimiento.id, data);
+                await updateMantenimiento(editingMantenimiento.id, data, fotoSolucion);
                 showNotification('Mantenimiento actualizado');
             } else {
-                await createMantenimiento(data);
+                await createMantenimiento(data, fotoSolucion);
                 showNotification('Mantenimiento registrado');
             }
             fetchMantenimientos();
