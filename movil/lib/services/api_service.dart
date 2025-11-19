@@ -20,6 +20,9 @@ import '../models/suscripcion.dart';
 import '../models/dashboard_data.dart';
 import '../models/proveedor.dart';
 import '../models/categoria_activo.dart';
+import '../models/disposicion.dart';
+import '../models/depreciacion.dart';
+import '../models/revalorizacion.dart';
 
 class ApiService {
   final Dio _dio;
@@ -715,6 +718,95 @@ class ApiService {
       }
     } on DioException catch (e) {
       throw Exception('Error al eliminar activo fijo: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  // --- 15. Disposiciones de Activos ---
+  Future<List<Disposicion>> getDisposiciones() async {
+    try {
+      final response = await _dio.get('/disposiciones/');
+      final data = response.data;
+      List<dynamic> dataList = (data is Map && data.containsKey('results'))
+          ? data['results'] as List
+          : data as List;
+      return dataList.map((json) => Disposicion.fromJson(json)).toList();
+    } on DioException catch (e) {
+      throw Exception('Error al cargar disposiciones: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<Disposicion> createDisposicion(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post('/disposiciones/', data: data);
+      return Disposicion.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception('Error al crear disposición: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<Disposicion> updateDisposicion(String id, Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.patch('/disposiciones/$id/', data: data);
+      return Disposicion.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception('Error al actualizar disposición: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<void> deleteDisposicion(String id) async {
+    try {
+      final response = await _dio.delete('/disposiciones/$id/');
+      if (response.statusCode != 204) {
+        throw Exception('Error al eliminar disposición: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error al eliminar disposición: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  // --- 16. Depreciaciones de Activos ---
+  Future<List<Depreciacion>> getDepreciaciones(String activoId) async {
+    try {
+      final response = await _dio.get('/depreciaciones/', queryParameters: {'activo_id': activoId});
+      final data = response.data;
+      List<dynamic> dataList = (data is Map && data.containsKey('results'))
+          ? data['results'] as List
+          : data as List;
+      return dataList.map((json) => Depreciacion.fromJson(json)).toList();
+    } on DioException catch (e) {
+      throw Exception('Error al cargar depreciaciones: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<Depreciacion> ejecutarDepreciacion(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post('/depreciaciones/ejecutar/', data: data);
+      return Depreciacion.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception('Error al ejecutar depreciación: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  // --- 17. Revalorizaciones de Activos ---
+  Future<List<Revalorizacion>> getRevalorizaciones(String activoId) async {
+    try {
+      final response = await _dio.get('/revalorizaciones/', queryParameters: {'activo_id': activoId});
+      final data = response.data;
+      List<dynamic> dataList = (data is Map && data.containsKey('results'))
+          ? data['results'] as List
+          : data as List;
+      return dataList.map((json) => Revalorizacion.fromJson(json)).toList();
+    } on DioException catch (e) {
+      throw Exception('Error al cargar revalorizaciones: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<Revalorizacion> ejecutarRevalorizacion(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post('/revalorizaciones/ejecutar/', data: data);
+      return Revalorizacion.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception('Error al ejecutar revalorización: ${e.response?.data?['detail'] ?? e.message}');
     }
   }
 }

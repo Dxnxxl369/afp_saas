@@ -26,6 +26,14 @@ from datetime import datetime
 from .report_utils import create_excel_report, create_pdf_report
 from decimal import Decimal, InvalidOperation
 from django.utils import timezone
+import boto3
+import json
+import uuid
+import os
+from datetime import datetime
+from django.conf import settings
+
+
 logger = logging.getLogger(__name__)
 
 class MyThemePreferencesView(APIView):
@@ -628,30 +636,92 @@ class PermisosViewSet(viewsets.ModelViewSet):
         return [permission() for permission in permission_classes]
 
 # --- NUEVO VIEWSET PARA LA BITÁCORA/LOG ---
+#class LogViewSet(viewsets.ModelViewSet):
+#    """
+#    ViewSet para recibir y guardar registros de log desde el frontend.
+#    No usa el filtro de tenant porque es una función a nivel de sistema.
+#    """
+#    queryset = Log.objects.all()
+#    serializer_class = LogSerializer
+#    permission_classes = [IsAuthenticated] # Solo usuarios autenticados pueden registrar logs
+#
+#    def perform_create(self, serializer):
+#        # Obtenemos la IP del cliente de forma segura
+#        x_forwarded_for = self.request.META.get('HTTP_X_FORWARDED_FOR')
+#        if x_forwarded_for:
+#            ip = x_forwarded_for.split(',')[0]
+#        else:
+#            ip = self.request.META.get('REMOTE_ADDR')
+#
+#        # Asignamos los datos automáticos antes de guardar
+#        empleado = self.request.user.empleado
+#        serializer.save(
+#            usuario=self.request.user,
+#            ip_address=ip,
+#            tenant_id=empleado.empresa.id if empleado else None
+#        )
+
 class LogViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet para recibir y guardar registros de log desde el frontend.
-    No usa el filtro de tenant porque es una función a nivel de sistema.
-    """
-    queryset = Log.objects.all()
-    serializer_class = LogSerializer
-    permission_classes = [IsAuthenticated] # Solo usuarios autenticados pueden registrar logs
+    # queryset = Log.objects.all() # Descomenta si tienes el modelo Log
+    # serializer_class = LogSerializer # Descomenta si tienes el serializer
 
-    def perform_create(self, serializer):
-        # Obtenemos la IP del cliente de forma segura
-        x_forwarded_for = self.request.META.get('HTTP_X_FORWARDED_FOR')
-        if x_forwarded_for:
-            ip = x_forwarded_for.split(',')[0]
+    def create(self, request, *args, **kwargs):
+        # 1. Validar datos recibidos
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # 2. Decidir estrategia: ¿Nube o Local?
+        if getattr(settings, 'USE_S3_LOGS', False):
+            # === ESTRATEGIA S3 (Producción) ===
+            try:
+                self._upload_to_s3(serializer.validated_data, request)
+                return Response({"status": "Archivado en S3"}, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                print(f"Error subiendo a S3: {e}")
+                # Si falla S3, guardamos en BD como respaldo
+                self.perform_create(serializer)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
-            ip = self.request.META.get('REMOTE_ADDR')
+            # === ESTRATEGIA BD (Local) ===
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-        # Asignamos los datos automáticos antes de guardar
-        empleado = self.request.user.empleado
-        serializer.save(
-            usuario=self.request.user,
-            ip_address=ip,
-            tenant_id=empleado.empresa.id if empleado else None
+    def _upload_to_s3(self, validated_data, request):
+        # Prepara el JSON
+        log_data = {
+            'id': str(uuid.uuid4()),
+            'timestamp': datetime.now().isoformat(),
+            'usuario': request.user.username if request.user.is_authenticated else 'Anonimo',
+            'accion': validated_data.get('accion'),
+            'payload': validated_data.get('payload', {}),
+            'ip': self.get_client_ip(request)
+        }
+
+        # Conecta con AWS
+        s3 = boto3.client(
+            's3',
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            region_name=settings.AWS_S3_REGION_NAME
         )
+        
+        # Sube el archivo (Ruta: logs/año/mes/dia/...)
+        date_path = datetime.now().strftime('%Y/%m/%d')
+        file_name = f"logs/{date_path}/{log_data['timestamp']}-{log_data['id']}.json"
+
+        s3.put_object(
+            Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+            Key=file_name,
+            Body=json.dumps(log_data, default=str),
+            ContentType='application/json'
+        )
+
+    def get_client_ip(self, request):
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            return x_forwarded_for.split(',')[0]
+        return request.META.get('REMOTE_ADDR')
 
 class RegisterEmpresaView(APIView):
     permission_classes = [AllowAny] 

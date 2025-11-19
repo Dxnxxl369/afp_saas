@@ -503,15 +503,37 @@ export const deleteRol = async (id) => {
 
 // Periodos Presupuestarios
 export const getPeriodos = () => apiClient.get('/periodos-presupuestarios/');
-export const createPeriodo = (data) => apiClient.post('/periodos-presupuestarios/', data);
-export const updatePeriodo = (id, data) => apiClient.patch(`/periodos-presupuestarios/${id}/`, data);
-export const deletePeriodo = (id) => apiClient.delete(`/periodos-presupuestarios/${id}/`);
+export const createPeriodo = async (data) => {
+    const response = await apiClient.post('/periodos-presupuestarios/', data);
+    await logAction('CREATE: PeriodoPresupuestario', { id_creado: response.data.id, nombre: data.nombre });
+    return response.data;
+};
+export const updatePeriodo = async (id, data) => {
+    const response = await apiClient.patch(`/periodos-presupuestarios/${id}/`, data);
+    await logAction('UPDATE: PeriodoPresupuestario', { id: id, ...data });
+    return response.data;
+};
+export const deletePeriodo = async (id) => {
+    await apiClient.delete(`/periodos-presupuestarios/${id}/`);
+    await logAction('DELETE: PeriodoPresupuestario', { id: id });
+};
 
 // Partidas Presupuestarias
-export const getPartidas = (params) => apiClient.get('/partidas-presupuestarias/', { params }); // params: { periodo_id: '...' }
-export const createPartida = (data) => apiClient.post('/partidas-presupuestarias/', data);
-export const updatePartida = (id, data) => apiClient.patch(`/partidas-presupuestarias/${id}/`, data);
-export const deletePartida = (id) => apiClient.delete(`/partidas-presupuestarias/${id}/`);
+export const getPartidas = (params) => apiClient.get('/partidas-presupuestarias/', { params });
+export const createPartida = async (data) => {
+    const response = await apiClient.post('/partidas-presupuestarias/', data);
+    await logAction('CREATE: PartidaPresupuestaria', { id_creado: response.data.id, nombre: data.nombre, periodo_id: data.periodo_id });
+    return response.data;
+};
+export const updatePartida = async (id, data) => {
+    const response = await apiClient.patch(`/partidas-presupuestarias/${id}/`, data);
+    await logAction('UPDATE: PartidaPresupuestaria', { id: id, ...data });
+    return response.data;
+};
+export const deletePartida = async (id) => {
+    await apiClient.delete(`/partidas-presupuestarias/${id}/`);
+    await logAction('DELETE: PartidaPresupuestaria', { id: id });
+};
 
 // Movimientos Presupuestarios (Solo lectura)
 export const getMovimientos = (params) => apiClient.get('/movimientos-presupuestarios/', { params }); // params: { partida_id: '...' }
@@ -551,21 +573,18 @@ export const getProveedores = async () => {
 
 export const createProveedor = async (data) => {
     const response = await apiClient.post('/proveedores/', data);
-    // Log DESPUÉS de éxito
     await logAction('CREATE: Proveedor', { id_creado: response.data.id, nombre: data.nombre, nit: data.nit });
     return response.data;
 };
 
 export const updateProveedor = async (id, data) => {
-    const response = await apiClient.patch(`/proveedores/${id}/`, data); // Usando PATCH
-    // Log DESPUÉS de éxito
+    const response = await apiClient.patch(`/proveedores/${id}/`, data);
     await logAction('UPDATE: Proveedor', { id: id, ...data });
     return response.data;
 };
 
 export const deleteProveedor = async (id) => {
     await apiClient.delete(`/proveedores/${id}/`);
-    // Log DESPUÉS de éxito
     await logAction('DELETE: Proveedor', { id: id });
 };
 
@@ -711,8 +730,7 @@ export const deleteMantenimiento = async (id) => {
 export const actualizarEstadoMantenimiento = async (id, data) => {
     // data debe ser { estado: 'NUEVO_ESTADO', notas_solucion: 'NUEVAS_NOTAS' }
     const response = await apiClient.patch(`/mantenimientos/${id}/actualizar_estado/`, data);
-    // El log ya se hace en el backend para esta acción específica
-    // await logAction('UPDATE_STATUS: Mantenimiento', { id: id, ...data });
+    await logAction('UPDATE_STATUS: Mantenimiento', { id: id, ...data });
     return response.data;
 };
 
@@ -762,9 +780,9 @@ export const getDepreciaciones = async (activoId) => {
 };
 
 export const ejecutarDepreciacion = async (data) => {
-    // data debe ser { activo_id, monto, notas }
+    // data: { activo_id, depreciation_type, y otros campos... }
     const response = await apiClient.post('/depreciaciones/ejecutar/', data);
-    await logAction('EXECUTE: Depreciacion', { activo_id: data.activo_id, monto: data.monto });
+    await logAction('EXECUTE: Depreciacion', { ...data });
     return response.data;
 };
 

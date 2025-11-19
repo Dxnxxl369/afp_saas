@@ -179,3 +179,18 @@ SIMPLE_JWT = {
     "TOKEN_OBTAIN_SERIALIZER": "api.serializers.MyTokenObtainPairSerializer", 
 }
 
+#DE AWS COSAS PARA LOG
+import os
+from dotenv import load_dotenv
+
+load_dotenv() # Carga variables de entorno si existen
+
+# --- CONFIGURACIÓN LOGS (S3 vs BD) ---
+# Si esta variable es True, los logs se van a AWS S3. Si no, a la BD local.
+USE_S3_LOGS = os.getenv('USE_S3_LOGS', 'False') == 'True'
+
+# Credenciales AWS (Solo se usan si USE_S3_LOGS es True)
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_S3_REGION_NAME = 'us-east-1' # O la región que elegiste (ej. us-east-1)
+AWS_STORAGE_BUCKET_NAME = 'logs-afp-saas-prod' # <--- ¡PON AQUÍ EL NOMBRE DE TU BUCKET!
