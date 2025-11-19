@@ -1,12 +1,50 @@
 // src/components/Sidebar.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react'; // Added useState, useEffect
 import { 
     LayoutGrid, Users, Building2, Settings, FolderTree, ActivitySquare, 
     Briefcase, Box, FileText, ShieldCheck, PiggyBank, Truck, MapPin, KeyRound, Wrench, TrendingUp, TrendingDown,
-    ClipboardList, ShoppingCart, CreditCard
+    ClipboardList, ShoppingCart, CreditCard, ChevronUp, ChevronDown, Trash2 // Added ChevronUp, ChevronDown, Trash2
 } from 'lucide-react';
 import { usePermissions } from '../hooks/usePermissions';
 import { useAuth } from '../context/AuthContext';
+
+// New CollapsibleNavItem component
+function CollapsibleNavItem({ icon, label, children, currentPage, handleNavigation }) {
+    const [isOpen, setIsOpen] = useState(false); // State to manage collapse
+
+    // Determine if any child is active to keep parent open
+    const hasActiveChild = React.Children.toArray(children).some(child => 
+        child && child.props && child.props.isActive
+    );
+
+    useEffect(() => {
+        if (hasActiveChild) {
+            setIsOpen(true);
+        }
+    }, [hasActiveChild]);
+
+    return (
+        <div className="space-y-1">
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-left ${
+                    isOpen || hasActiveChild ? 'bg-tertiary text-primary font-medium' : 'text-primary hover:bg-tertiary'
+                }`}
+            >
+                <span className="flex items-center gap-3">
+                    {icon}
+                    {label}
+                </span>
+                {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>
+            {isOpen && (
+                <div className="pl-4 space-y-1"> {/* Adjusted padding for nested items */}
+                    {children}
+                </div>
+            )}
+        </div>
+    );
+}
 
 export default function Sidebar({ isOpen, onClose, currentPage, setCurrentPage }) {
   const { canAccess } = usePermissions();
@@ -18,7 +56,7 @@ export default function Sidebar({ isOpen, onClose, currentPage, setCurrentPage }
   };
 
   // Helper para renderizar solo si hay acceso
-  const renderNavItemIfAllowed = (moduleName, icon, label) => {
+  const renderNavItem = (moduleName, icon, label, isChild = false) => {
     if (canAccess(moduleName)) {
       return (
         <NavItem
@@ -26,6 +64,7 @@ export default function Sidebar({ isOpen, onClose, currentPage, setCurrentPage }
           label={label}
           isActive={currentPage === moduleName}
           onClick={() => handleNavigation(moduleName)}
+          isChild={isChild} // Add isChild prop for styling if needed
         />
       );
     }
@@ -34,25 +73,46 @@ export default function Sidebar({ isOpen, onClose, currentPage, setCurrentPage }
 
   const navigationContent = (
     <>
-      {renderNavItemIfAllowed('dashboard', <LayoutGrid size={20} />, "Dashboard")}
-      {renderNavItemIfAllowed('suscripcion', <CreditCard size={20} />, "Suscripción")}
-      {renderNavItemIfAllowed('empleados', <Users size={20} />, "Empleados")}
-      {renderNavItemIfAllowed('cargos', <Briefcase size={20} />, "Cargos")}
-      {renderNavItemIfAllowed('departamentos', <Building2 size={20} />, "Departamentos")}
-      {renderNavItemIfAllowed('solicitudes_compra', <ClipboardList size={20} />, "Solicitudes de Compra")}
-      {renderNavItemIfAllowed('ordenes_compra', <ShoppingCart size={20} />, "Órdenes de Compra")}
-      {renderNavItemIfAllowed('activos_fijos', <Box size={20} />, "Activos Fijos")}
-      {renderNavItemIfAllowed('revalorizaciones', <TrendingUp size={20} />, "Revalorización")}
-      {renderNavItemIfAllowed('depreciaciones', <TrendingDown size={20} />, "Depreciación")}
-      {renderNavItemIfAllowed('mantenimientos', <Wrench size={20} />, "Mantenimientos")}
-      {renderNavItemIfAllowed('presupuestos', <PiggyBank size={20} />, "Presupuestos")}
-      {renderNavItemIfAllowed('estados', <ActivitySquare size={20} />, "Estados")}
-      {renderNavItemIfAllowed('ubicaciones', <MapPin size={20} />, "Ubicaciones")}
-      {renderNavItemIfAllowed('proveedores', <Truck size={20} />, "Proveedores")}
-      {renderNavItemIfAllowed('categorias', <FolderTree size={20} />, "Categorías")}      
-      {renderNavItemIfAllowed('roles', <ShieldCheck size={20} />, "Roles")}
-      {renderNavItemIfAllowed('permisos', <KeyRound size={20} />, "Permisos")}
-      {renderNavItemIfAllowed('reportes', <FileText size={20} />, "Reportes")}
+      {renderNavItem('dashboard', <LayoutGrid size={20} />, "Dashboard")}
+      {renderNavItem('suscripcion', <CreditCard size={20} />, "Suscripción")}
+      {renderNavItem('empleados', <Users size={20} />, "Empleados")}
+      {renderNavItem('cargos', <Briefcase size={20} />, "Cargos")}
+      {renderNavItem('departamentos', <Building2 size={20} />, "Departamentos")}
+      
+      {/* --- Activos Category --- */}
+      <CollapsibleNavItem 
+          icon={<Box size={20} />} 
+          label="Activos" 
+          currentPage={currentPage} 
+          handleNavigation={handleNavigation}
+      >
+          {renderNavItem('activos_fijos', <Box size={20} />, "Activos Fijos", true)}
+          
+          {/* --- Adquisicion Sub-Category --- */}
+          <CollapsibleNavItem 
+              icon={<ShoppingCart size={20} />} 
+              label="Adquisición" 
+              currentPage={currentPage} 
+              handleNavigation={handleNavigation}
+          >
+              {renderNavItem('solicitudes_compra', <ClipboardList size={20} />, "Solicitudes de Compra", true)}
+              {renderNavItem('ordenes_compra', <ShoppingCart size={20} />, "Órdenes de Compra", true)}
+          </CollapsibleNavItem>
+
+          {renderNavItem('revalorizaciones', <TrendingUp size={20} />, "Revalorización", true)}
+          {renderNavItem('depreciaciones', <TrendingDown size={20} />, "Depreciación", true)}
+          {renderNavItem('disposiciones', <Trash2 size={20} />, "Disposición", true)} {/* NEW */}
+          {renderNavItem('mantenimientos', <Wrench size={20} />, "Mantenimientos", true)}
+      </CollapsibleNavItem>
+
+      {renderNavItem('presupuestos', <PiggyBank size={20} />, "Presupuestos")}
+      {renderNavItem('estados', <ActivitySquare size={20} />, "Estados")}
+      {renderNavItem('ubicaciones', <MapPin size={20} />, "Ubicaciones")}
+      {renderNavItem('proveedores', <Truck size={20} />, "Proveedores")}
+      {renderNavItem('categorias', <FolderTree size={20} />, "Categorías")}      
+      {renderNavItem('roles', <ShieldCheck size={20} />, "Roles")}
+      {renderNavItem('permisos', <KeyRound size={20} />, "Permisos")}
+      {renderNavItem('reportes', <FileText size={20} />, "Reportes")}
     </>
   );
 
@@ -101,7 +161,7 @@ export default function Sidebar({ isOpen, onClose, currentPage, setCurrentPage }
   );
 }
 
-function NavItem({ icon, label, isActive, onClick }) {
+function NavItem({ icon, label, isActive, onClick, isChild = false }) {
   return (
     <button
       onClick={onClick}
@@ -109,7 +169,7 @@ function NavItem({ icon, label, isActive, onClick }) {
         isActive
           ? 'bg-accent text-white font-medium'
           : 'text-primary hover:bg-tertiary'
-      }`}
+      } ${isChild ? 'text-sm' : ''}`} // Smaller font for children
     >
       {icon}
       {label}

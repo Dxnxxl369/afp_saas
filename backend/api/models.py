@@ -20,6 +20,13 @@ def upload_path_activo(instance, filename):
     """
     return f'tenant_{instance.empresa.id}/fotos_activos/{filename}'
 
+def upload_path_mantenimiento(instance, filename):
+    """
+    Guarda la foto de mantenimiento en una carpeta específica del tenant.
+    Ruta: /media/tenant_<empresa_id>/fotos_mantenimientos/<filename>
+    """
+    return f'tenant_{instance.mantenimiento.empresa.id}/fotos_mantenimientos/{filename}'
+
 # --- Modelos de Negocio (Base de datos: 'af_saas') ---
 
 class Empresa(models.Model):
@@ -304,6 +311,21 @@ class Mantenimiento(models.Model):
     def __str__(self):
         return f"{self.get_tipo_display()} - {self.activo.nombre} ({self.get_estado_display()})"
 
+class MantenimientoFoto(models.Model):
+    TIPO_FOTO_CHOICES = [
+        ('PROBLEMA', 'Problema'),
+        ('SOLUCION', 'Solución'),
+    ]
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    mantenimiento = models.ForeignKey(Mantenimiento, related_name='fotos', on_delete=models.CASCADE)
+    foto = models.ImageField(upload_to=upload_path_mantenimiento)
+    subido_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='fotos_subidas')
+    tipo = models.CharField(max_length=20, choices=TIPO_FOTO_CHOICES, default='PROBLEMA')
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Foto de {self.mantenimiento.id} ({self.get_tipo_display()})"
+
 # --- [NUEVO] Modelo de Suscripción (Base de datos: 'af_saas') ---
 class Suscripcion(models.Model):
     PLAN_CHOICES = [
@@ -356,6 +378,13 @@ class RevalorizacionActivo(models.Model):
 
 # --- [NUEVO] Modelo de Depreciación (Base de datos: 'af_saas') ---
 class DepreciacionActivo(models.Model):
+    DEPRECIATION_TYPE_CHOICES = [
+        ('STRAIGHT_LINE', 'Línea Recta'),
+        ('DECLINING_BALANCE', 'Saldo Decreciente'),
+        ('UNITS_OF_PRODUCTION', 'Unidades de Producción'),
+        ('MANUAL', 'Manual'), # Para la depreciación simple existente
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='depreciaciones')
     activo = models.ForeignKey(ActivoFijo, on_delete=models.CASCADE, related_name='depreciaciones')
@@ -364,6 +393,7 @@ class DepreciacionActivo(models.Model):
     valor_anterior = models.DecimalField(max_digits=12, decimal_places=2)
     valor_nuevo = models.DecimalField(max_digits=12, decimal_places=2)
     monto_depreciado = models.DecimalField(max_digits=12, decimal_places=2)
+    depreciation_type = models.CharField(max_length=20, choices=DEPRECIATION_TYPE_CHOICES, default='MANUAL') # Nuevo campo
     notas = models.TextField(blank=True, null=True)
     
     realizado_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
@@ -422,6 +452,33 @@ class Log(models.Model):
     class Meta:
         # Nombre explícito de la tabla en la base de datos 'log_saas'
         db_table = 'log_bitacora'
+
+# --- [NUEVO] Modelo de Disposición de Activos ---
+class DisposicionActivo(models.Model):
+    TIPO_DISPOSICION_CHOICES = [
+        ('VENTA', 'Venta'),
+        ('BAJA', 'Baja por Obsolescencia/Daño'),
+        ('DONACION', 'Donación'),
+        ('ROBO', 'Robo/Pérdida'),
+        ('OTRO', 'Otro')
+    ]
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='disposiciones_activos')
+    activo = models.ForeignKey(ActivoFijo, on_delete=models.PROTECT, related_name='disposiciones') # PROTECT para mantener historial
+    tipo_disposicion = models.CharField(max_length=50, choices=TIPO_DISPOSICION_CHOICES)
+    fecha_disposicion = models.DateField(default=timezone.now)
+    valor_venta = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    razon = models.TextField(blank=True, null=True)
+    realizado_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Disposición de Activo"
+        verbose_name_plural = "Disposiciones de Activos"
+        ordering = ['-fecha_disposicion']
+
+    def __str__(self):
+        return f"Disposición de {self.activo.nombre} ({self.get_tipo_disposicion_display()}) por {self.realizado_por.username if self.realizado_por else 'N/A'}"
 
 # --- [NUEVO] Modelo de Predicción de Mantenimiento (Base de datos: 'analytics_saas') ---
 class PrediccionMantenimiento(models.Model):

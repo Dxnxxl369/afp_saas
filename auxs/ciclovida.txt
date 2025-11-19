@@ -1,0 +1,47 @@
+**Resumen de Fórmulas para el Ciclo de Vida del Activo**
+
+---
+### **Fórmulas de Depreciación**
+---
+
+#### **1. Línea Recta (Straight-Line)**
+
+*   **Fórmula:** `Monto a Depreciar = (Valor Actual - Valor Residual) / Años de Vida Útil Restantes`
+*   **Por qué funciona así:** Es el método más simple y común. Distribuye el costo depreciable del activo (su valor menos lo que valdrá al final) de manera **exactamente igual** durante cada año de su vida útil. Es predecible y fácil de calcular.
+
+#### **2. Monto Manual (Manual Amount / Impairment)**
+
+*   **Fórmula:** `Nuevo Valor = Valor Actual - Monto Manual Ingresado`
+*   **Por qué funciona así:** No es una depreciación estándar por paso del tiempo. Se usa para registrar un **deterioro o pérdida de valor súbita** (un "evento"), como un daño o una obsolescencia inesperada. Es un ajuste directo y manual.
+
+#### **3. Saldo Decreciente (Declining Balance)**
+
+*   **Fórmula:** `Monto a Depreciar = Valor Actual * Tasa de Depreciación` (La tasa es un decimal, ej: 0.2 para 20%)
+*   **Por qué funciona así:** Es un método de "depreciación acelerada". Asume que el activo pierde más valor en sus primeros años (como un coche nuevo). Cada año, el monto a depreciar es menor porque se calcula sobre un "Valor Actual" cada vez más pequeño.
+
+#### **4. Unidades de Producción (Units of Production)**
+
+*   **Fórmula:** `Depreciación por Unidad = (Valor Actual - Valor Residual) / Capacidad Total de Unidades`
+    `Monto a Depreciar = Depreciación por Unidad * Unidades Usadas en el Periodo`
+*   **Por qué funciona así:** Basa la pérdida de valor en el **uso**, no en el tiempo. Es ideal para maquinaria o vehículos. Si un mes no se usa, no se deprecia. Si se usa mucho, se deprecia más.
+
+---
+### **Fórmulas de Revalorización (Aumento o Deterioro)**
+---
+
+#### **1. Por Factor (By Factor)**
+
+*   **Fórmula:** `Nuevo Valor = Valor Actual * Factor`
+*   **Por qué funciona así:** Se usa para aplicar un índice o factor de ajuste general. Por ejemplo, un factor de `1.03` representa un aumento del 3% por inflación. Un factor de `0.95` representaría un deterioro del 5%.
+
+#### **2. A Monto Fijo (To Fixed Amount)**
+
+*   **Fórmula:** `Nuevo Valor = Monto Fijo Ingresado`
+*   **Por qué funciona así:** Es el método más directo. No calcula nada, simplemente **establece** el valor del activo al nuevo monto que tú decidas. Es útil cuando una tasación externa determina un valor específico.
+
+#### **3. Por Porcentaje (By Percentage)**
+
+*   **Fórmula:** `Nuevo Valor = Valor Actual * (1 + Porcentaje / 100)`
+*   **Por qué funciona así:** Ajusta el valor actual según un porcentaje. Es intuitivo para el usuario.
+    *   **Aumento:** Un porcentaje positivo (ej: `10%`) aumenta el valor.
+    *   **Deterioro:** Un porcentaje negativo (ej: `-15%`) disminuye el valor.

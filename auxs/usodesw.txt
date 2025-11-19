@@ -1,0 +1,45 @@
+**Uso del Software: Módulo de Presupuesto y su Ciclo**
+
+Este manual explica de forma breve la lógica detrás del módulo de presupuesto y cómo se integra con el resto del sistema.
+
+---
+### **1. La Jerarquía del Presupuesto**
+
+El módulo se estructura en tres niveles para ofrecer control y flexibilidad.
+
+*   **¿Por qué crear un "Periodo Presupuestario"?**
+    *   **Propósito:** Es el contenedor principal. Representa un ciclo contable completo, como "Presupuesto Anual 2025" o "Presupuesto Q3 2025". Te permite separar y comparar el gasto entre diferentes rangos de tiempo. Sin un periodo, el dinero no tendría un marco temporal de validez.
+
+*   **¿Por qué crear "Partidas" dentro de un Periodo?**
+    *   **Propósito:** Son las "etiquetas" o "sobres" donde asignas el dinero dentro de un periodo. En lugar de tener una sola bolsa de dinero para todo el año, la divides por áreas, como "Partida para Marketing", "Partida para Compra de Equipos de TI", "Partida para Mantenimiento". Esto te permite controlar cuánto gasta cada área y evitar que un departamento consuma el presupuesto de otro.
+
+*   **¿Qué son los "Movimientos"?**
+    *   **Propósito:** Es el registro de cada gasto individual que afecta a una partida. Cuando se completa una orden de compra, se crea un movimiento de tipo "GASTO" que resta dinero de la partida correspondiente. Esto forma el historial contable.
+
+---
+### **2. Estados del Periodo Presupuestario**
+
+El estado de un periodo controla lo que se puede hacer con el dinero asignado.
+
+*   **PENDIENTE:** Es el estado de planificación. Puedes crear el periodo, añadir o ajustar las partidas y sus montos, pero el dinero **no se puede gastar**. El sistema no te permitirá registrar compras contra las partidas de un periodo pendiente.
+
+*   **ACTIVO:** El periodo está en curso. El dinero de las partidas ya está disponible para ser utilizado. Solo se pueden registrar gastos de órdenes de compra en partidas que pertenezcan a un periodo **ACTIVO**.
+
+*   **CERRADO:** El ciclo ha terminado. Ya no se puede asignar más dinero ni registrar más gastos en este periodo. Sirve para "congelar" las cuentas y poder generar reportes históricos y análisis de fin de año sin que los datos cambien.
+
+---
+### **3. Influencia en el Ciclo de Vida del Activo**
+
+El presupuesto no es solo un reporte, sino una herramienta de control que se integra directamente en la adquisición de nuevos activos.
+
+*   **En la "Solicitud de Compra":**
+    *   Al crear una solicitud, puedes (y debes) asignarle una Partida Presupuestaria.
+    *   El sistema revisará si el **costo estimado** de tu solicitud excede el **monto disponible** en esa partida. Si lo excede, te advertirá, dándote la opción de forzar la solicitud si tienes los permisos, pero dejando un registro claro de que se está solicitando más dinero del disponible.
+
+*   **En la "Recepción de la Orden de Compra":**
+    *   Este es el momento crítico. Cuando marcas una orden como "recibida" para finalmente crear el activo, el sistema realiza una última validación contra la partida.
+    *   Verifica que el **precio final** de la compra no exceda el presupuesto disponible en la partida.
+    *   Verifica que el periodo presupuestario de esa partida esté **ACTIVO**. Si está pendiente o cerrado, la compra se bloqueará.
+    *   Si todo es correcto, se crea el activo y automáticamente se genera un movimiento de "GASTO" en la partida, actualizando su `monto_gastado` y reduciendo el `monto_disponible`.
+
+De esta forma, el sistema asegura que la adquisición de nuevos activos siempre esté respaldada y validada por el presupuesto definido, evitando gastos no autorizados o descontrolados.

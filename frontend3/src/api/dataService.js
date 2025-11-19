@@ -768,6 +768,30 @@ export const ejecutarDepreciacion = async (data) => {
     return response.data;
 };
 
+// --- [NUEVO] Funciones para Disposición de Activos ---
+export const getDisposiciones = async () => {
+    const response = await apiClient.get('/disposiciones/');
+    return response.data;
+};
+
+export const createDisposicion = async (data) => {
+    const response = await apiClient.post('/disposiciones/', data);
+    await logAction('CREATE: DisposicionActivo', { id_creado: response.data.id, activo_id: data.activo_id, tipo: data.tipo_disposicion });
+    return response.data;
+};
+
+export const updateDisposicion = async (id, data) => {
+    const response = await apiClient.patch(`/disposiciones/${id}/`, data);
+    await logAction('UPDATE: DisposicionActivo', { id: id, ...data });
+    return response.data;
+};
+
+export const deleteDisposicion = async (id) => {
+    await apiClient.delete(`/disposiciones/${id}/`);
+    await logAction('DELETE: DisposicionActivo', { id: id });
+    return null;
+};
+
 // --- [NUEVO] Flujo de Adquisición ---
 
 // --- Solicitudes de Compra ---
@@ -870,4 +894,16 @@ export const downloadReportePorQuery = async (query) => {
 export const getDashboardData = async () => {
     const response = await apiClient.get('/dashboard/');
     return response.data;
+};
+
+// --- [NUEVO] Funciones para Reporte de Presupuestos ---
+export const getReportePresupuestos = async (params) => {
+    const urlPath = 'reportes-presupuestos/';
+    try {
+        const response = await apiClient.get(urlPath, { params });
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching budget report:", error.response?.data || error.message);
+        throw error;
+    }
 };

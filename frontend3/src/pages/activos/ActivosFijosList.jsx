@@ -202,13 +202,8 @@ export default function ActivosFijosList() {
         try {
             setLoading(true);
             const data = await getActivosFijos();
-            const processedData = (data.results || data || []).map(activo => ({
-                ...activo,
-                categoria_nombre: activo.categoria?.nombre || 'N/A',
-                estado_nombre: activo.estado?.nombre || 'N/A',
-                ubicacion_nombre: activo.ubicacion?.nombre || 'N/A',
-            }));
-            setActivos(processedData);
+            const activosActivos = (data.results || data || []).filter(activo => activo.estado_nombre !== 'DADO_DE_BAJA');
+            setActivos(activosActivos);
         } catch (error) { 
             console.error("Error al obtener activos:", error); 
             showNotification('Error al cargar los activos','error');
@@ -309,50 +304,72 @@ export default function ActivosFijosList() {
                     ) : activos.length === 0 ? (
                         <p className="text-center text-tertiary py-12">No hay activos fijos para mostrar.</p>
                     ) : (
-                        activos.map((activo, index) => (
+                        activos.map((activo) => (
                             <motion.div
                                 key={activo.id}
-                                className="flex flex-col md:flex-row items-start md:items-center p-3 border-b border-theme last:border-b-0 hover:bg-tertiary rounded-lg"
+                                className="flex flex-col md:flex-row items-start p-4 border-b border-theme last:border-b-0 hover:bg-tertiary/60 rounded-lg transition-colors duration-200"
                             >
-                                <div className="p-0 bg-accent bg-opacity-10 rounded-lg mr-4 mb-2 md:mb-0 flex-shrink-0">
+                                <div className="p-0 bg-accent bg-opacity-10 rounded-lg mr-4 mb-3 md:mb-0 flex-shrink-0">
                                     {activo.foto_activo ? (
-                                        <img 
-                                            src={activo.foto_activo}
-                                            alt={activo.nombre}
-                                            className="w-12 h-12 rounded-lg object-cover"         
-                                            onError={(e) => { console.error("Error cargando imagen:", activo.foto_activo, e); e.target.style.display='none';}}
-                                        />
+                                        <img src={activo.foto_activo} alt={activo.nombre} className="w-16 h-16 rounded-lg object-cover" />
                                     ) : (
-                                        <div className="w-12 h-12 flex items-center justify-center">
-                                            <Box className="text-accent" size={24} />
+                                        <div className="w-16 h-16 flex items-center justify-center rounded-lg bg-tertiary">
+                                            <Box className="text-accent" size={32} />
                                         </div>
                                     )}
                                 </div>
                                 
-                                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-2">
-                                    <div>
-                                        <p className="font-semibold text-primary">{activo.nombre}</p>
-                                        <p className="text-sm text-secondary flex items-center gap-1.5"><Tag size={14} /> {activo.codigo_interno}</p>
+                                <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-4">
+                                    {/* Columna 1: Info Principal */}
+                                    <div className="space-y-1 col-span-2 sm:col-span-1">
+                                        <p className="font-bold text-lg text-primary">{activo.nombre}</p>
+                                        <p className="text-sm text-secondary font-mono bg-tertiary px-2 py-0.5 rounded w-fit">{activo.codigo_interno}</p>
                                     </div>
-                                    <div>
-                                        <p className="text-primary flex items-center gap-1.5"><CheckSquare size={14} /> {activo.estado_nombre}</p>
-                                        <p className="text-secondary text-sm flex items-center gap-1.5"><MapPin size={14} /> {activo.ubicacion_nombre}</p>
+
+                                    {/* Columna 2: Estado y Valor */}
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-medium text-secondary">Valor Actual</p>
+                                        <p className="font-semibold text-primary">{parseFloat(activo.valor_actual).toLocaleString('es-BO', { style: 'currency', currency: 'BOB' })}</p>
                                     </div>
-                                    <div>
-                                        <p className="text-primary font-medium flex items-center gap-1.5"><DollarSign size={14} /> {parseFloat(activo.valor_actual).toLocaleString('es-BO', { style: 'currency', currency: 'BOB' })}</p>
-                                        <p className="text-secondary text-sm flex items-center gap-1.5"><Tag size={14} /> {activo.categoria_nombre}</p>
+
+                                    {/* Columna 3: Detalles Físicos */}
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-medium text-secondary">Ubicación</p>
+                                        <p className="text-primary">{activo.ubicacion_nombre || 'N/A'}</p>
                                     </div>
-                                    <div>
-                                        <p className="text-primary text-sm font-medium">Adquirido:</p>
-                                        <p className="text-secondary text-sm">{new Date(activo.fecha_adquisicion + 'T00:00:00').toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+                                    
+                                    {/* Columna 4: Detalles Organizacionales */}
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-medium text-secondary">Departamento</p>
+                                        <p className="text-primary">{activo.departamento_nombre || 'No asignado'}</p>
+                                    </div>
+                                    
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-medium text-secondary">Categoría</p>
+                                        <p className="text-primary">{activo.categoria_nombre || 'N/A'}</p>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-medium text-secondary">Vida Útil</p>
+                                        <p className="text-primary">{activo.vida_util} años</p>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-medium text-secondary">Proveedor</p>
+                                        <p className="text-primary">{activo.proveedor_nombre || 'N/A'}</p>
+                                    </div>
+
+                                    <div className="space-y-1">
+                                        <p className="text-sm font-medium text-secondary">Adquisición</p>
+                                        <p className="text-primary">{new Date(activo.fecha_adquisicion + 'T00:00:00').toLocaleDateString('es-ES')}</p>
                                     </div>
                                 </div>
                                 
                                 {canManage && (
-                                    <div className="flex gap-2 ml-auto mt-2 md:mt-0 md:ml-4">
-                                        <button onClick={() => setQrModal({ isOpen: true, assetId: activo.id, assetName: activo.nombre })} className="p-2 text-primary hover:text-accent"><QrCode size={18} /></button>
-                                        <button onClick={() => openEditModal(activo)} className="p-2 text-primary hover:text-accent"><Edit size={18} /></button>
-                                        <button onClick={() => handleDelete(activo.id)} className="p-2 text-primary hover:text-red-500"><Trash2 size={18} /></button>
+                                    <div className="flex gap-2 ml-auto mt-3 md:mt-0 md:ml-4 self-start">
+                                        <button onClick={() => setQrModal({ isOpen: true, assetId: activo.id, assetName: activo.nombre })} className="p-2 text-primary hover:text-accent" title="Generar QR"><QrCode size={18} /></button>
+                                        <button onClick={() => openEditModal(activo)} className="p-2 text-primary hover:text-accent" title="Editar"><Edit size={18} /></button>
+                                        <button onClick={() => handleDelete(activo.id)} className="p-2 text-primary hover:text-red-500" title="Eliminar"><Trash2 size={18} /></button>
                                     </div>
                                 )}
                             </motion.div>

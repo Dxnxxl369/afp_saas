@@ -13,7 +13,8 @@ from .views import (
     RegisterEmpresaView, MyTokenObtainPairView, UserPermissionsView, MantenimientoViewSet, SuscripcionViewSet, NotificacionViewSet,
     MyThemePreferencesView, ReporteQueryView, ReporteQueryExportView, RevalorizacionActivoViewSet, DepreciacionActivoViewSet,
     DashboardDataView,
-    SolicitudCompraViewSet, OrdenCompraViewSet, PeriodoPresupuestarioViewSet, PartidaPresupuestariaViewSet, MovimientoPresupuestarioViewSet
+    SolicitudCompraViewSet, OrdenCompraViewSet, PeriodoPresupuestarioViewSet, PartidaPresupuestariaViewSet, MovimientoPresupuestarioViewSet, ReportePresupuestosViewSet,
+    DisposicionActivoViewSet
 )
 from rest_framework_simplejwt.views import TokenRefreshView
 
@@ -32,12 +33,14 @@ router.register(r'permisos', PermisosViewSet)
 router.register(r'periodos-presupuestarios', PeriodoPresupuestarioViewSet, basename='periodo-presupuestario')
 router.register(r'partidas-presupuestarias', PartidaPresupuestariaViewSet, basename='partida-presupuestaria')
 router.register(r'movimientos-presupuestarios', MovimientoPresupuestarioViewSet, basename='movimiento-presupuestario')
+router.register(r'reportes-presupuestos', ReportePresupuestosViewSet, basename='reporte-presupuesto') # <-- NUEVO: Reporte de Presupuestos
 # --- [NUEVO] Registrar las nuevas rutas ---
 router.register(r'mantenimientos', MantenimientoViewSet, basename='mantenimiento')
 router.register(r'suscripciones', SuscripcionViewSet, basename='suscripcion')
 router.register(r'notificaciones', NotificacionViewSet, basename='notificacion')
 router.register(r'revalorizaciones', RevalorizacionActivoViewSet, basename='revalorizacion')
 router.register(r'depreciaciones', DepreciacionActivoViewSet, basename='depreciacion')
+router.register(r'disposiciones', DisposicionActivoViewSet, basename='disposicion') # NEW
 router.register(r'solicitudes-compra', SolicitudCompraViewSet, basename='solicitud-compra')
 router.register(r'ordenes-compra', OrdenCompraViewSet, basename='orden-compra')
 

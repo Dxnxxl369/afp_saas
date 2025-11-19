@@ -1,7 +1,7 @@
 // src/pages/depreciacion/DepreciacionPage.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingDown, Loader, Box, DollarSign, Calendar, Hash, Info } from 'lucide-react';
+import { TrendingDown, Loader, Box, DollarSign, Calendar, Hash, Info, Divide, Percent, Package } from 'lucide-react';
 import { getActivosFijos, getDepreciaciones, ejecutarDepreciacion } from '../../api/dataService';
 import { useNotification } from '../../context/NotificacionContext';
 import { usePermissions } from '../../hooks/usePermissions';
@@ -29,7 +29,9 @@ export default function DepreciacionPage() {
     const [selectedActivoId, setSelectedActivoId] = useState('');
     const [historial, setHistorial] = useState([]);
     
-    const [monto, setMonto] = useState('');
+    // --- Estados del formulario ---
+    const [depreciationType, setDepreciationType] = useState('STRAIGHT_LINE');
+    const [formValues, setFormValues] = useState({});
     const [notas, setNotas] = useState('');
 
     const [loadingActivos, setLoadingActivos] = useState(true);
@@ -40,12 +42,14 @@ export default function DepreciacionPage() {
     const { hasPermission, loadingPermissions } = usePermissions();
     const canManage = !loadingPermissions && hasPermission('manage_depreciacion');
 
+    // Cargar activos
     useEffect(() => {
         const fetchActivos = async () => {
             try {
                 setLoadingActivos(true);
                 const data = await getActivosFijos();
-                setActivos(data.results || data || []);
+                const activosActivos = (data.results || data || []).filter(a => a.valor_actual > 0 && a.estado_nombre !== 'DADO_DE_BAJA');
+                setActivos(activosActivos);
             } catch (error) {
                 console.error("Error cargando activos:", error);
                 showNotification('Error al cargar la lista de activos', 'error');
@@ -56,6 +60,7 @@ export default function DepreciacionPage() {
         fetchActivos();
     }, [showNotification]);
 
+    // Cargar historial
     useEffect(() => {
         if (!selectedActivoId) {
             setHistorial([]);
@@ -82,20 +87,8 @@ export default function DepreciacionPage() {
 
     const handleEjecutar = async (e) => {
         e.preventDefault();
-        if (!selectedActivoId || !monto) {
-            showNotification('Debe seleccionar un activo y especificar un monto.', 'error');
-            return;
-        }
-
-        const numericMonto = parseFloat(monto);
-        if (isNaN(numericMonto) || numericMonto <= 0) {
-            showNotification('El monto a depreciar debe ser un número positivo.', 'error');
-            return;
-        }
-
-        const valorActual = parseFloat(selectedActivo.valor_actual);
-        if (numericMonto > valorActual) {
-            showNotification('El monto a depreciar no puede ser mayor al valor actual del activo.', 'error');
+        if (!selectedActivoId) {
+            showNotification('Debe seleccionar un activo.', 'error');
             return;
         }
 
@@ -103,17 +96,20 @@ export default function DepreciacionPage() {
         try {
             const data = {
                 activo_id: selectedActivoId,
-                monto: monto,
+                depreciation_type: depreciationType,
                 notas: notas,
+                ...formValues
             };
             await ejecutarDepreciacion(data);
             showNotification('Depreciación ejecutada con éxito');
-            setMonto('');
+            setFormValues({});
             setNotas('');
+            // Recargar datos
             const updatedHistorial = await getDepreciaciones(selectedActivoId);
             setHistorial(updatedHistorial.results || updatedHistorial || []);
             const updatedActivos = await getActivosFijos();
-            setActivos(updatedActivos.results || updatedActivos || []);
+            const activosActivos = (updatedActivos.results || updatedActivos || []).filter(a => a.valor_actual > 0 && a.estado_nombre !== 'DADO_DE_BAJA');
+            setActivos(activosActivos);
 
         } catch (error) {
             console.error("Error al ejecutar depreciación:", error.response?.data || error);
@@ -122,6 +118,38 @@ export default function DepreciacionPage() {
             setLoadingEjecutar(false);
         }
     };
+    
+    const handleFormValueChange = (e) => {
+        setFormValues(prev => ({...prev, [e.target.name]: e.target.value}));
+    }
+
+    const renderDynamicFields = () => {
+        switch (depreciationType) {
+            case 'MANUAL':
+                return <FormInput label="Monto a Depreciar (Bs.)" type="number" step="0.01" min="0.01" name="monto" value={formValues.monto || ''} onChange={handleFormValueChange} required />;
+            case 'STRAIGHT_LINE':
+                return <FormInput label="Valor Residual (Bs.)" type="number" step="0.01" min="0" name="valor_residual" value={formValues.valor_residual || ''} onChange={handleFormValueChange} placeholder="0" />;
+            case 'DECLINING_BALANCE':
+                return <FormInput label="Tasa de Depreciación" type="number" step="0.01" min="0.01" max="1" name="tasa_depreciacion" value={formValues.tasa_depreciacion || ''} onChange={handleFormValueChange} placeholder="Ej: 0.2 para 20%" required />;
+            case 'UNITS_OF_PRODUCTION':
+                return (
+                    <>
+                        <FormInput label="Total Unidades Estimadas" type="number" step="1" min="1" name="total_unidades_estimadas" value={formValues.total_unidades_estimadas || ''} onChange={handleFormValueChange} placeholder="Ej: 100000 (para km)" required/>
+                        <FormInput label="Unidades Producidas/Usadas" type="number" step="1" min="1" name="unidades_producidas" value={formValues.unidades_producidas || ''} onChange={handleFormValueChange} placeholder="Ej: 5000 (km este periodo)" required/>
+                        <FormInput label="Valor Residual (Bs.)" type="number" step="0.01" min="0" name="valor_residual" value={formValues.valor_residual || ''} onChange={handleFormValueChange} placeholder="0" />
+                    </>
+                );
+            default:
+                return null;
+        }
+    };
+    
+    const DEPRECIATION_TYPES = [
+        { id: 'STRAIGHT_LINE', label: 'Línea Recta', icon: <Divide size={16} /> },
+        { id: 'MANUAL', label: 'Monto Manual', icon: <DollarSign size={16} /> },
+        { id: 'DECLINING_BALANCE', label: 'Saldo Decreciente', icon: <Percent size={16} /> },
+        { id: 'UNITS_OF_PRODUCTION', label: 'Unidades Producidas', icon: <Package size={16} /> },
+    ];
 
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
@@ -134,14 +162,8 @@ export default function DepreciacionPage() {
                 <div className="lg:col-span-1 space-y-6">
                     <div className="bg-secondary border border-theme rounded-xl p-6">
                         <h2 className="text-xl font-semibold text-primary mb-4 flex items-center gap-2"><Box size={20} /> Seleccionar Activo</h2>
-                        {loadingActivos ? (
-                            <Loader className="animate-spin text-accent" />
-                        ) : (
-                            <FormSelect
-                                label="Activo Fijo"
-                                value={selectedActivoId}
-                                onChange={(e) => setSelectedActivoId(e.target.value)}
-                            >
+                        {loadingActivos ? <Loader className="animate-spin text-accent" /> : (
+                            <FormSelect label="Activo Fijo a Depreciar" value={selectedActivoId} onChange={(e) => setSelectedActivoId(e.target.value)}>
                                 <option value="">-- Seleccione un activo --</option>
                                 {activos.map(a => <option key={a.id} value={a.id}>{a.nombre} ({a.codigo_interno})</option>)}
                             </FormSelect>
@@ -151,9 +173,7 @@ export default function DepreciacionPage() {
                     {selectedActivo && (
                         <div className="bg-secondary border border-theme rounded-xl p-6 animate-in fade-in">
                             <h3 className="text-lg font-semibold text-primary mb-4">Valor Actual</h3>
-                            <p className="text-3xl font-bold text-accent">
-                                {parseFloat(selectedActivo.valor_actual).toLocaleString('es-BO', { style: 'currency', currency: 'BOB' })}
-                            </p>
+                            <p className="text-3xl font-bold text-accent">{parseFloat(selectedActivo.valor_actual).toLocaleString('es-BO', { style: 'currency', currency: 'BOB' })}</p>
                         </div>
                     )}
 
@@ -161,17 +181,20 @@ export default function DepreciacionPage() {
                         <form onSubmit={handleEjecutar} className="bg-secondary border border-theme rounded-xl p-6 space-y-4 animate-in fade-in">
                             <h2 className="text-xl font-semibold text-primary mb-2">Ejecutar Depreciación</h2>
                             
-                            <FormInput 
-                                label="Monto a Depreciar (Bs.)"
-                                type="number" 
-                                step="0.01"
-                                min="0.01"
-                                placeholder="Ej: 500"
-                                value={monto} 
-                                onChange={(e) => setMonto(e.target.value)} 
-                                required 
-                            />
-                            <FormInput label="Motivo / Nota (Opcional)" placeholder="Ej: Depreciación anual" value={notas} onChange={(e) => setNotas(e.target.value)} />
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-secondary">Método de Cálculo</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {DEPRECIATION_TYPES.map(type => (
+                                        <button key={type.id} type="button" onClick={() => setDepreciationType(type.id)} className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg border transition-all ${depreciationType === type.id ? 'bg-accent text-white border-accent' : 'bg-tertiary text-primary border-transparent hover:border-theme'}`}>
+                                            {type.icon} {type.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            
+                            {renderDynamicFields()}
+
+                            <FormInput label="Motivo / Nota (Opcional)" placeholder="Ej: Depreciación anual 2025" value={notas} onChange={(e) => setNotas(e.target.value)} />
                             <button type="submit" disabled={loadingEjecutar} className="w-full flex items-center justify-center gap-2 bg-accent text-white font-semibold px-4 py-2 rounded-lg hover:bg-opacity-90 transition-transform active:scale-95 disabled:opacity-50">
                                 {loadingEjecutar ? <Loader className="animate-spin" /> : <TrendingDown size={20} />}
                                 Depreciar Activo
@@ -182,52 +205,30 @@ export default function DepreciacionPage() {
 
                 <div className="lg:col-span-2 bg-secondary border border-theme rounded-xl p-6">
                     <h2 className="text-xl font-semibold text-primary mb-4">Historial de Depreciaciones del Activo</h2>
-                    {loadingHistorial ? (
-                        <div className="flex justify-center items-center h-48"><Loader className="animate-spin text-accent" /></div>
-                    ) : !selectedActivoId ? (
-                        <p className="text-center text-tertiary py-12">Selecciona un activo para ver su historial.</p>
-                    ) : historial.length === 0 ? (
-                        <p className="text-center text-tertiary py-12">Este activo no tiene depreciaciones.</p>
-                    ) : (
+                    {loadingHistorial ? <div className="flex justify-center items-center h-48"><Loader className="animate-spin text-accent" /></div>
+                    : !selectedActivoId ? <p className="text-center text-tertiary py-12">Selecciona un activo para ver su historial.</p>
+                    : historial.length === 0 ? <p className="text-center text-tertiary py-12">Este activo no tiene depreciaciones.</p>
+                    : (
                         <div className="space-y-3">
-                            {historial.map(h => {
-                                const percentageChange = h.valor_anterior > 0 ? ((h.valor_nuevo / h.valor_anterior) - 1) * 100 : 0;
-                                const colorClass = 'text-red-500';
-
-                                return (
-                                    <div key={h.id} className="p-4 border border-theme rounded-lg hover:bg-tertiary/40">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <p className="font-semibold text-primary flex items-center gap-2">
-                                                    <Calendar size={14} /> {new Date(h.fecha).toLocaleString('es-ES')}
-                                                </p>
-                                                <p className="text-sm text-secondary mt-1">Realizado por: {h.realizado_por?.username || 'N/A'}</p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className={`font-bold ${colorClass} text-lg`}>
-                                                    {percentageChange.toFixed(2)}%
-                                                </p>
-                                                <p className="text-xs text-tertiary flex items-center gap-1 justify-end"><DollarSign size={12}/> Monto: {parseFloat(h.monto_depreciado).toFixed(2)}</p>
-                                            </div>
+                            {historial.map(h => (
+                                <div key={h.id} className="p-4 border border-theme rounded-lg hover:bg-tertiary/40">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="font-semibold text-primary flex items-center gap-2"><Calendar size={14} /> {new Date(h.fecha).toLocaleString('es-ES')}</p>
+                                            <p className="text-sm text-secondary mt-1">Método: <span className="font-medium">{h.depreciation_type_display}</span></p>
+                                            <p className="text-sm text-secondary mt-1">Realizado por: {h.realizado_por?.username || 'N/A'}</p>
                                         </div>
-                                        <div className="mt-3 pt-3 border-t border-theme grid grid-cols-2 gap-4">
-                                            <div>
-                                                <p className="text-xs text-secondary">Valor Anterior</p>
-                                                <p className="font-mono text-primary">{parseFloat(h.valor_anterior).toLocaleString('es-BO', { style: 'currency', currency: 'BOB' })}</p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-xs text-secondary">Valor Nuevo</p>
-                                                <p className="font-mono text-primary">{parseFloat(h.valor_nuevo).toLocaleString('es-BO', { style: 'currency', currency: 'BOB' })}</p>
-                                            </div>
+                                        <div className="text-right">
+                                            <p className="font-bold text-red-500 text-lg">-{parseFloat(h.monto_depreciado).toLocaleString('es-BO', { style: 'currency', currency: 'BOB' })}</p>
                                         </div>
-                                        {h.notas && (
-                                            <div className="mt-3 pt-3 border-t border-theme/50">
-                                                <p className="text-xs text-secondary flex items-center gap-1.5"><Info size={12}/> {h.notas}</p>
-                                            </div>
-                                        )}
                                     </div>
-                                );
-                            })}
+                                    <div className="mt-3 pt-3 border-t border-theme grid grid-cols-2 gap-4">
+                                        <div><p className="text-xs text-secondary">Valor Anterior</p><p className="font-mono text-primary">{parseFloat(h.valor_anterior).toLocaleString('es-BO')}</p></div>
+                                        <div className="text-right"><p className="text-xs text-secondary">Valor Nuevo</p><p className="font-mono text-primary">{parseFloat(h.valor_nuevo).toLocaleString('es-BO')}</p></div>
+                                    </div>
+                                    {h.notas && <div className="mt-3 pt-3 border-t border-theme/50"><p className="text-xs text-secondary flex items-center gap-1.5"><Info size={12}/> {h.notas}</p></div>}
+                                </div>
+                            ))}
                         </div>
                     )}
                 </div>

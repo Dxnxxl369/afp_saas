@@ -15,7 +15,11 @@ import '../models/ubicacion.dart';
 import '../models/estado.dart';
 import '../models/mantenimiento.dart';
 import '../models/empleado.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/suscripcion.dart';
+import '../models/dashboard_data.dart';
+import '../models/proveedor.dart';
+import '../models/categoria_activo.dart';
 
 class ApiService {
   final Dio _dio;
@@ -199,7 +203,8 @@ class ApiService {
         'detalle': detalle,
       });
       return Ubicacion.fromJson(response.data);
-    } on DioException catch (e) {
+    }
+    on DioException catch (e) {
       throw Exception('Error al crear ubicación: ${e.response?.data?['detail'] ?? e.message}');
     }
   }
@@ -291,21 +296,52 @@ class ApiService {
     }
   }
 
-  Future<Mantenimiento> createMantenimiento(Map<String, dynamic> data) async {
+  Future<Mantenimiento> createMantenimiento(Map<String, dynamic> data, List<XFile> newPhotos) async {
     try {
-      final response = await _dio.post('/mantenimientos/', data: data);
+      // Convert XFile list to MultipartFile list
+      List<MultipartFile> photoFiles = [];
+      for (var file in newPhotos) {
+        photoFiles.add(await MultipartFile.fromFile(file.path, filename: file.name));
+      }
+
+      // Add the list of files to the form data
+      data['fotos_nuevas'] = photoFiles;
+
+      final formData = FormData.fromMap(data);
+      
+      final response = await _dio.post('/mantenimientos/', data: formData);
       return Mantenimiento.fromJson(response.data);
     } on DioException catch (e) {
+      debugPrint("DioException on createMantenimiento: ${e.response?.data}");
       throw Exception('Error al crear mantenimiento: ${e.response?.data?['detail'] ?? e.message}');
+    } catch (e) {
+      debugPrint("Exception on createMantenimiento: $e");
+      throw Exception('Error inesperado al crear mantenimiento: $e');
     }
   }
 
-  Future<Mantenimiento> updateMantenimiento(String id, Map<String, dynamic> data) async {
+  Future<Mantenimiento> updateMantenimiento(String id, Map<String, dynamic> data, List<XFile> newPhotos, List<String> deletedPhotos) async {
     try {
-      final response = await _dio.patch('/mantenimientos/$id/', data: data);
+      // Convert XFile list to MultipartFile list
+      List<MultipartFile> photoFiles = [];
+      for (var file in newPhotos) {
+        photoFiles.add(await MultipartFile.fromFile(file.path, filename: file.name));
+      }
+
+      // Add file list and deleted IDs list to the data map
+      data['fotos_nuevas'] = photoFiles;
+      data['fotos_a_eliminar'] = deletedPhotos;
+
+      final formData = FormData.fromMap(data, ListFormat.multiCompatible);
+
+      final response = await _dio.patch('/mantenimientos/$id/', data: formData);
       return Mantenimiento.fromJson(response.data);
     } on DioException catch (e) {
+      debugPrint("DioException on updateMantenimiento: ${e.response?.data}");
       throw Exception('Error al actualizar mantenimiento: ${e.response?.data?['detail'] ?? e.message}');
+    } catch (e) {
+      debugPrint("Exception on updateMantenimiento: $e");
+      throw Exception('Error inesperado al actualizar mantenimiento: $e');
     }
   }
 
@@ -320,9 +356,37 @@ class ApiService {
     }
   }
 
+  Future<Mantenimiento> actualizarEstadoMantenimiento(String id, String estado, String? notas, List<XFile> fotosSolucion) async {
+    try {
+      final data = {
+        'estado': estado,
+        if (notas != null) 'notas_solucion': notas,
+      };
+
+      List<MultipartFile> photoFiles = [];
+      for (var file in fotosSolucion) {
+        photoFiles.add(await MultipartFile.fromFile(file.path, filename: file.name));
+      }
+      final formData = FormData.fromMap(data, ListFormat.multiCompatible);
+      if (photoFiles.isNotEmpty) {
+        formData.files.addAll(photoFiles.map((file) => MapEntry('fotos_solucion', file)));
+      }
+
+      final response = await _dio.post('/mantenimientos/$id/actualizar-estado/', data: formData);
+      return Mantenimiento.fromJson(response.data);
+    } on DioException catch (e) {
+      debugPrint("DioException on actualizarEstadoMantenimiento: ${e.response?.data}");
+      throw Exception('Error al actualizar estado: ${e.response?.data?['detail'] ?? e.message}');
+    } catch (e) {
+      debugPrint("Exception on actualizarEstadoMantenimiento: $e");
+      throw Exception('Error inesperado al actualizar estado: $e');
+    }
+  }
+
   // --- 9. Empleados ---
   Future<List<Empleado>> getEmpleados() async {
     try {
+
       final response = await _dio.get('/empleados/');
       final data = response.data;
       List<dynamic> dataList = (data is Map && data.containsKey('results'))
@@ -334,7 +398,93 @@ class ApiService {
     }
   }
 
-  // --- 10. Suscripcion ---
+  // --- 10. Proveedores ---
+  Future<List<Proveedor>> getProveedores() async {
+    try {
+      final response = await _dio.get('/proveedores/');
+      final data = response.data;
+      List<dynamic> dataList = (data is Map && data.containsKey('results'))
+          ? data['results'] as List
+          : data as List;
+      return dataList.map((json) => Proveedor.fromJson(json)).toList();
+    } on DioException catch (e) {
+      throw Exception('Error al cargar proveedores: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<Proveedor> createProveedor(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post('/proveedores/', data: data);
+      return Proveedor.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception('Error al crear proveedor: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<Proveedor> updateProveedor(String id, Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.patch('/proveedores/$id/', data: data);
+      return Proveedor.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception('Error al actualizar proveedor: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<void> deleteProveedor(String id) async {
+    try {
+      final response = await _dio.delete('/proveedores/$id/');
+      if (response.statusCode != 204) {
+        throw Exception('Error al eliminar proveedor: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error al eliminar proveedor: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  // --- 11. Categorias de Activo ---
+  Future<List<CategoriaActivo>> getCategoriasActivo() async {
+    try {
+      final response = await _dio.get('/categorias-activo/');
+      final data = response.data;
+      List<dynamic> dataList = (data is Map && data.containsKey('results'))
+          ? data['results'] as List
+          : data as List;
+      return dataList.map((json) => CategoriaActivo.fromJson(json)).toList();
+    } on DioException catch (e) {
+      throw Exception('Error al cargar categorías de activo: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<CategoriaActivo> createCategoriaActivo(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post('/categorias-activo/', data: data);
+      return CategoriaActivo.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception('Error al crear categoría de activo: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<CategoriaActivo> updateCategoriaActivo(String id, Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.patch('/categorias-activo/$id/', data: data);
+      return CategoriaActivo.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception('Error al actualizar categoría de activo: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<void> deleteCategoriaActivo(String id) async {
+    try {
+      final response = await _dio.delete('/categorias-activo/$id/');
+      if (response.statusCode != 204) {
+        throw Exception('Error al eliminar categoría de activo: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error al eliminar categoría de activo: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  // --- 12. Suscripcion ---
   Future<Suscripcion?> getSuscripcion() async {
     try {
       final response = await _dio.get('/suscripciones/');
@@ -351,7 +501,17 @@ class ApiService {
     }
   }
 
-  // --- 11. Presupuestos: Periodos ---
+  // --- 13. Dashboard ---
+  Future<DashboardData> getDashboardData() async {
+    try {
+      final response = await _dio.get('/dashboard/');
+      return DashboardData.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception('Error al cargar los datos del dashboard: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  // --- 14. Presupuestos: Periodos ---
   Future<List<PeriodoPresupuestario>> getPeriodos() async {
     try {
       final response = await _dio.get('/periodos-presupuestarios/');
@@ -508,6 +668,53 @@ class ApiService {
       return dataList.map((json) => ActivoFijo.fromJson(json)).toList();
     } on DioException catch (e) {
       throw Exception('Error al cargar activos fijos: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<ActivoFijo> createActivo(Map<String, dynamic> data, {XFile? fotoActivo}) async {
+    try {
+      final formData = FormData.fromMap(data);
+      if (fotoActivo != null) {
+        formData.files.add(MapEntry('foto_activo', await MultipartFile.fromFile(fotoActivo.path, filename: fotoActivo.name)));
+      }
+      final response = await _dio.post('/activos-fijos/', data: formData);
+      return ActivoFijo.fromJson(response.data);
+    } on DioException catch (e) {
+      debugPrint("DioException on createActivo: ${e.response?.data}");
+      throw Exception('Error al crear activo fijo: ${e.response?.data?['detail'] ?? e.message}');
+    } catch (e) {
+      debugPrint("Exception on createActivo: $e");
+      throw Exception('Error inesperado al crear activo fijo: $e');
+    }
+  }
+
+  Future<ActivoFijo> updateActivo(String id, Map<String, dynamic> data, {XFile? fotoActivo, bool deleteExistingPhoto = false}) async {
+    try {
+      final formData = FormData.fromMap(data);
+      if (fotoActivo != null) {
+        formData.files.add(MapEntry('foto_activo', await MultipartFile.fromFile(fotoActivo.path, filename: fotoActivo.name)));
+      } else if (deleteExistingPhoto) {
+        formData.fields.add(const MapEntry('foto_activo', '')); // Enviar cadena vacía para eliminar
+      }
+      final response = await _dio.patch('/activos-fijos/$id/', data: formData);
+      return ActivoFijo.fromJson(response.data);
+    } on DioException catch (e) {
+      debugPrint("DioException on updateActivo: ${e.response?.data}");
+      throw Exception('Error al actualizar activo fijo: ${e.response?.data?['detail'] ?? e.message}');
+    } catch (e) {
+      debugPrint("Exception on updateActivo: $e");
+      throw Exception('Error inesperado al actualizar activo fijo: $e');
+    }
+  }
+
+  Future<void> deleteActivo(String id) async {
+    try {
+      final response = await _dio.delete('/activos-fijos/$id/');
+      if (response.statusCode != 204) {
+        throw Exception('Error al eliminar activo fijo: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      throw Exception('Error al eliminar activo fijo: ${e.response?.data?['detail'] ?? e.message}');
     }
   }
 }

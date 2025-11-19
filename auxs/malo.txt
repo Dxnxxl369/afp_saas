@@ -1,0 +1,97 @@
+**Manual de Uso y Flujo Guiado: Ciclo de Vida de un Activo**
+
+Sigue estos pasos en orden para probar el flujo completo.
+
+---
+### **Fase 1: Adquisición del Activo**
+---
+
+**Paso 1.1: Crear Solicitud de Compra**
+
+1.  Ve al módulo **"Adquisición"** -> **"Solicitudes de Compra"**.
+2.  Haz clic en **"Nueva Solicitud"**.
+3.  Rellena el formulario con los siguientes datos:
+    *   **Descripción:** `Servidor de Alto Rendimiento Dell PowerEdge R740`
+    *   **Costo Estimado:** `45000`
+    *   **Justificación:** `Actualización de infraestructura del centro de datos para soportar las nuevas aplicaciones empresariales.`
+    *   **Departamento:** `Tecnología de la Información`
+    *   **Partida Presupuestaria:** (Selecciona una partida relevante que tenga fondos)
+
+**Paso 1.2: Aprobar la Solicitud**
+
+1.  Como usuario con permisos de aprobación (`approve_solicitud_compra`), busca la solicitud recién creada en la lista.
+2.  Haz clic en el botón para **"Decidir"** sobre la solicitud.
+3.  Selecciona **"Aprobar"** y guarda. El estado de la solicitud cambiará a `APROBADA`.
+
+**Paso 1.3: Crear Orden de Compra**
+
+1.  Ve al módulo **"Adquisición"** -> **"Órdenes de Compra"**.
+2.  Haz clic en **"Nueva Orden de Compra"**.
+3.  Rellena el formulario:
+    *   **Solicitud de Compra:** Selecciona la solicitud del "Servidor de Alto Rendimiento" que aprobaste.
+    *   **Proveedor:** `Dell Technologies` (Si no existe, créalo primero desde el módulo de Proveedores).
+    *   **Precio Final:** `44500` (El precio negociado final).
+    *   **Fecha de Entrega Estimada:** (Selecciona una fecha futura).
+
+**Paso 1.4: Recibir el Activo y Darlo de Alta**
+
+1.  Una vez que la orden de compra se ha "enviado" y el producto "llega", busca la orden en la lista.
+2.  Haz clic en el botón para **"Recibir"**.
+3.  Se abrirá un formulario para registrar el activo. Rellénalo con los datos finales:
+    *   **Categoría:** `Servidores` (Si no existe, créala).
+    *   **Estado:** `Nuevo` o `En Almacén`.
+    *   **Ubicación:** `Centro de Datos Principal`.
+    *   **Vida Útil (años):** `5`
+4.  Guarda el formulario. En este momento, el **"Servidor de Alto Rendimiento Dell PowerEdge R740"** ha sido creado oficialmente en tu módulo de **"Activos Fijos"**.
+
+---
+### **Fase 2: Uso y Gestión del Activo**
+---
+
+**Paso 2.1: Depreciar el Activo (Línea Recta)**
+
+1.  Ve al módulo de **"Depreciación"**.
+2.  En el selector de "Activo Fijo", elige el **"Servidor de Alto Rendimiento Dell PowerEdge R740"**.
+3.  Selecciona el método de cálculo **"Línea Recta"**.
+4.  Ingresa los siguientes datos:
+    *   **Valor Residual (Bs.):** `2000`
+    *   **Notas:** `Depreciación anual aplicando método de línea recta.`
+5.  Haz clic en **"Depreciar Activo"**. El valor del activo se reducirá según el cálculo `(Valor Actual - Valor Residual) / Vida Útil`.
+
+**Paso 2.2: Revalorizar el Activo (Aumento de Valor)**
+
+*   **Escenario:** Se ha instalado un módulo de memoria RAM adicional que aumenta el valor del servidor.
+
+1.  Ve al módulo de **"Revalorización"**.
+2.  Selecciona el **"Servidor de Alto Rendimiento Dell PowerEdge R740"**.
+3.  Selecciona el método de cálculo **"Monto Fijo"**.
+4.  Ingresa los siguientes datos:
+    *   **Nuevo Valor Fijo (Bs.):** (Introduce un valor superior al valor actual depreciado, por ejemplo, si ahora vale 38000, introduce `41000`).
+    *   **Motivo / Nota:** `Aumento de valor por instalación de 128GB de RAM adicionales.`
+5.  Haz clic en **"Revalorizar Activo"**. El valor del activo se actualizará al nuevo monto.
+
+---
+### **Fase 3: Disposición Final del Activo**
+---
+
+**Paso 3.1: Dar de Baja el Activo**
+
+*   **Escenario:** Después de varios años, el servidor ha quedado obsoleto.
+
+1.  Ve al nuevo módulo de **"Disposición"**.
+2.  Haz clic en **"Nueva Disposición"**.
+3.  Rellena el formulario:
+    *   **Activo:** `Servidor de Alto Rendimiento Dell PowerEdge R740`
+    *   **Tipo de Disposición:** `Baja por Obsolescencia/Daño`
+    *   **Fecha de Disposición:** (La fecha actual).
+    *   **Razón o motivo:** `El servidor ya no cumple con los requerimientos de rendimiento y ha sido reemplazado.`
+4.  Haz clic en **"Guardar"**.
+
+---
+### **Fase 4: Verificación Final**
+---
+
+1.  **Verificar en Lista de Activos:** Ve al módulo principal de **"Activos Fijos"**. Confirma que el **"Servidor de Alto Rendimiento Dell PowerEdge R740"** **YA NO APARECE** en la lista.
+2.  **Verificar en Módulo de Disposición:** Ve de nuevo al módulo de **"Disposición"**. Confirma que ahora **SÍ APARECE** un registro para el servidor que acabas de dar de baja.
+
+¡Felicidades! Has completado todo el ciclo de vida de un activo en el sistema.

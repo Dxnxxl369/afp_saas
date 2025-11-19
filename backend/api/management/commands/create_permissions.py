@@ -51,6 +51,10 @@ PERMISSIONS_LIST = [
     # --- [NUEVO] Permisos de Depreciación ---
     ('view_depreciacion', 'Ver el historial de depreciaciones de activos'),
     ('manage_depreciacion', 'Ejecutar el proceso de depreciación de activos'),
+
+    # --- [NUEVO] Permisos de Disposición ---
+    ('view_disposicion', 'Ver el historial de disposición de activos'),
+    ('manage_disposicion', 'Ejecutar el proceso de disposición de activos'),
     
     # --- [NUEVO] Flujo de Adquisición ---
     ('view_solicitud_compra', 'Ver la lista de solicitudes de compra'),

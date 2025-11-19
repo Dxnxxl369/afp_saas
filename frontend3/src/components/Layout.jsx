@@ -22,6 +22,7 @@ import DepreciacionPage from '../pages/depreciacion/DepreciacionPage';
 import SolicitudesCompraList from '../pages/solicitudes_compra/SolicitudesCompraList';
 import OrdenesCompraList from '../pages/ordenes_compra/OrdenesCompraList';
 import SuscripcionPage from '../pages/suscripcion/SuscripcionPage';
+import DisposicionList from '../pages/disposicion/DisposicionList'; // NEW IMPORT
 
 export default function Layout() {
   const [currentPage, _setCurrentPage] = useState('dashboard');
@@ -50,6 +51,7 @@ export default function Layout() {
       mantenimientos: <MantenimientoList />,
       revalorizaciones: <RevalorizacionPage />,
       depreciaciones: <DepreciacionPage />,
+      disposiciones: <DisposicionList />, // NEW PAGE
       solicitudes_compra: <SolicitudesCompraList />,
       ordenes_compra: <OrdenesCompraList />,
       cargos: <CargosList />,

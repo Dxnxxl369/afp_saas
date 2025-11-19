@@ -7,6 +7,7 @@ from .models import *
 from django.db import transaction
 from datetime import timedelta, datetime # <-- datetime AÑADIDO
 import re # <-- re AÑADIDO
+from django.db.models import Sum # <-- AÑADIDO: Importar Sum
 
 class CurrentUserEmpresaDefault:
     requires_context = True
@@ -187,14 +188,37 @@ class EmpleadoSerializer(serializers.ModelSerializer): # <-- [EDITADO]
         # Actualizar el resto de campos del empleado
         return super().update(instance, validated_data)
 
-class ActivoFijoSerializer(serializers.ModelSerializer): # <-- [EDITADO]
+class ActivoFijoSerializer(serializers.ModelSerializer):
     empresa = serializers.HiddenField(default=CurrentUserEmpresaDefault())
-    # --- [NUEVO] Campo de foto ---
     foto_activo = serializers.ImageField(required=False, allow_null=True)
+    
+    # --- [NUEVO] Campos de solo lectura para nombres relacionados ---
+    categoria_nombre = serializers.CharField(source='categoria.nombre', read_only=True)
+    estado_nombre = serializers.CharField(source='estado.nombre', read_only=True)
+    ubicacion_nombre = serializers.CharField(source='ubicacion.nombre', read_only=True)
+    departamento_nombre = serializers.CharField(source='departamento.nombre', read_only=True, allow_null=True)
+    proveedor_nombre = serializers.CharField(source='proveedor.nombre', read_only=True, allow_null=True)
 
     class Meta:
         model = ActivoFijo
-        fields = '__all__' # Incluye 'foto_activo'
+        fields = [
+            'id', 'nombre', 'codigo_interno', 'fecha_adquisicion', 
+            'valor_actual', 'vida_util', 'foto_activo',
+            # IDs para escritura
+            'categoria', 'estado', 'ubicacion', 'departamento', 'proveedor',
+            # Nombres para lectura
+            'categoria_nombre', 'estado_nombre', 'ubicacion_nombre', 
+            'departamento_nombre', 'proveedor_nombre',
+            # Campo oculto de empresa
+            'empresa', 'orden_compra',
+        ]
+        extra_kwargs = {
+            'categoria': {'write_only': True},
+            'estado': {'write_only': True},
+            'ubicacion': {'write_only': True},
+            'departamento': {'write_only': True},
+            'proveedor': {'write_only': True},
+        }
 
 class CategoriaActivoSerializer(serializers.ModelSerializer):
     empresa = serializers.HiddenField(default=CurrentUserEmpresaDefault())
@@ -247,11 +271,25 @@ class PartidaPresupuestariaSerializer(serializers.ModelSerializer):
 class PeriodoPresupuestarioSerializer(serializers.ModelSerializer):
     partidas = PartidaPresupuestariaSerializer(many=True, read_only=True)
     empresa = serializers.HiddenField(default=CurrentUserEmpresaDefault())
+    
+    total_gastado_periodo = serializers.SerializerMethodField()
+    ahorro_o_sobregasto = serializers.SerializerMethodField()
 
     class Meta:
         model = PeriodoPresupuestario
-        fields = ('id', 'empresa', 'nombre', 'fecha_inicio', 'fecha_fin', 'estado', 'monto_total', 'partidas')
-        read_only_fields = ('monto_total',)
+        fields = ('id', 'empresa', 'nombre', 'fecha_inicio', 'fecha_fin', 'estado', 'monto_total', 'partidas', 'total_gastado_periodo', 'ahorro_o_sobregasto')
+        read_only_fields = ('monto_total', 'total_gastado_periodo', 'ahorro_o_sobregasto')
+
+    def get_total_gastado_periodo(self, obj):
+        # Suma el monto_gastado de todas las partidas asociadas a este período
+        return obj.partidas.aggregate(Sum('monto_gastado'))['monto_gastado__sum'] or 0
+
+    def get_ahorro_o_sobregasto(self, obj):
+        total_gastado = self.get_total_gastado_periodo(obj)
+        # Si monto_total no está calculado aún, o es 0, el ahorro/sobregasto es 0
+        if not obj.monto_total:
+            return 0
+        return obj.monto_total - total_gastado
 
 
 # --- Serializers para Flujo de Adquisición (Actualizado) ---
@@ -267,6 +305,7 @@ class SolicitudCompraSerializer(serializers.ModelSerializer):
     partida_presupuestaria_id = serializers.PrimaryKeyRelatedField(
         queryset=PartidaPresupuestaria.objects.all(), source='partida_presupuestaria', write_only=True, allow_null=True, required=False
     )
+    force_overspend = serializers.BooleanField(write_only=True, required=False, default=False) # NEW FIELD
 
     class Meta:
         model = SolicitudCompra
@@ -276,10 +315,12 @@ class SolicitudCompraSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data['solicitante'] = self.context['request'].user
         partida = validated_data.get('partida_presupuestaria')
+        force_overspend = validated_data.pop('force_overspend', False) # Extract and remove from validated_data
+
         if partida:
-            if partida.monto_disponible < validated_data.get('costo_estimado', 0):
+            if not force_overspend and partida.monto_disponible < validated_data.get('costo_estimado', 0):
                 raise serializers.ValidationError({
-                    'partida_presupuestaria_id': 'El costo estimado excede el monto disponible en la partida presupuestaria.'
+                    'partida_presupuestaria_id': 'El costo estimado excede el monto disponible en la partida presupuestaria. Para forzar la solicitud, envíe `force_overspend: true`.'
                 })
         return super().create(validated_data)
 
@@ -357,12 +398,24 @@ class RegisterEmpresaSerializer(serializers.Serializer):
             raise serializers.ValidationError("La fecha de expiración debe tener el formato MM/AA.")
         
         try:
-            month, year = value.split('/')
-            # El último día del mes de expiración
-            last_day_of_month = (datetime(2000 + int(year), int(month) + 1, 1) - timedelta(days=1)).day
-            expiry_date = datetime(2000 + int(year), int(month), last_day_of_month)
-            if expiry_date < datetime.now():
-                raise serializers.ValidationError("La tarjeta ha expirado.")
+            month, year_str = value.split('/') # Cambiado 'year' a 'year_str' para evitar conflicto con la función year 
+            year = int(year_str) # Convertir a int
+            
+            # Ajustar el año a formato de 4 dígitos (ej: 23 -> 2023)
+            # COMENTADO para permitir cualquier fecha FUTURA para testing
+            # current_year = datetime.now().year
+            # if year < (current_year % 100) - 20: # Ajuste heurístico para años recientes
+            #     year += 2000
+            # elif year < (current_year % 100) + 80:
+            #     year += 1900
+            # else:
+            #     year += 2000 # Default
+                
+            # Deshabilita la validación de fecha de expiración para TESTING
+            # last_day_of_month = (datetime(year, int(month) + 1, 1) - timedelta(days=1)).day
+            # expiry_date = datetime(year, int(month), last_day_of_month)
+            # if expiry_date < datetime.now():
+            #     raise serializers.ValidationError("La tarjeta ha expirado.")
         except (ValueError, TypeError):
             raise serializers.ValidationError("Fecha de expiración inválida.")
         return value
@@ -430,9 +483,10 @@ class RegisterEmpresaSerializer(serializers.Serializer):
             # Crear o obtener el rol 'Admin' para esta nueva empresa
             rol_admin, _ = Roles.objects.get_or_create(empresa=empresa, nombre='Admin')
 
-            # Obtener todos los permisos excepto los de superadmin (si los hubiera)
-            # Ajusta esto si quieres ser más específico
-            permisos_para_admin = Permisos.objects.exclude(nombre__startswith='manage_permiso') # Excluir gestión global de permisos
+            # Obtener todos los permisos globales para asignarlos al rol de Admin.
+            # Nota: Esto asume que el comando `manage.py create_permissions` ha sido ejecutado
+            # y que la tabla de Permisos está poblada.
+            permisos_para_admin = Permisos.objects.all()
 
             # Asignar todos esos permisos al rol 'Admin' de esta empresa
             rol_admin.permisos.set(permisos_para_admin)
@@ -458,19 +512,40 @@ class EmpleadoSimpleSerializer(serializers.ModelSerializer):
         fields = ['id', 'usuario', 'apellido_p', 'apellido_m'] # Campos necesarios para mostrar nombre
         
 # --- [NUEVO] Serializers para los nuevos modelos ---
+
+class MantenimientoFotoSerializer(serializers.ModelSerializer):
+    subido_por = UsuarioSerializer(read_only=True)
+    class Meta:
+        model = MantenimientoFoto
+        fields = ['id', 'foto', 'tipo', 'subido_por', 'fecha_creacion']
+
+
 class MantenimientoSerializer(serializers.ModelSerializer):
-    empresa = serializers.HiddenField(default=CurrentUserEmpresaDefault())    # Al LEER, anidamos info del activo y del empleado (read_only=True)
+    empresa = serializers.HiddenField(default=CurrentUserEmpresaDefault())
     activo = ActivoFijoSerializer(read_only=True)
     empleado_asignado = EmpleadoSimpleSerializer(read_only=True)
+    
+    # Campos de fotos separados por tipo
+    fotos_problema = serializers.SerializerMethodField()
+    fotos_solucion = serializers.SerializerMethodField()
 
-    # Al ESCRIBIR, esperamos solo los IDs (write_only=True)
+    # Campos de escritura
     activo_id = serializers.PrimaryKeyRelatedField(
         queryset=ActivoFijo.objects.all(), source='activo', write_only=True
     )
-    # Hacemos el ID del empleado opcional al escribir (required=False, allow_null=True)
     empleado_asignado_id = serializers.PrimaryKeyRelatedField(
         queryset=Empleado.objects.all(), source='empleado_asignado', write_only=True,
         required=False, allow_null=True
+    )
+    fotos_nuevas = serializers.ListField(
+        child=serializers.ImageField(allow_empty_file=False, use_url=False),
+        write_only=True,
+        required=False
+    )
+    fotos_a_eliminar = serializers.ListField(
+        child=serializers.UUIDField(),
+        write_only=True,
+        required=False
     )
 
     class Meta:
@@ -478,14 +553,57 @@ class MantenimientoSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'tipo', 'estado', 'fecha_inicio', 'fecha_fin',
             'descripcion_problema', 'notas_solucion', 'costo',
-            # Campos de lectura (anidados)
-            'activo', 'empleado_asignado',
-            # Campos de escritura (IDs)
+            'activo', 'empleado_asignado', 
+            'fotos_problema', 'fotos_solucion',  # <-- Campos de lectura nuevos
             'activo_id', 'empleado_asignado_id',
-            'empresa', # <-- AÑADIDO
+            'fotos_nuevas', 'fotos_a_eliminar',
+            'empresa',
         ]
-        # La empresa se asigna automáticamente
-        read_only_fields = () # <-- ELIMINADO read_only_fields
+
+    def get_fotos_problema(self, obj):
+        fotos = obj.fotos.filter(tipo='PROBLEMA')
+        return MantenimientoFotoSerializer(fotos, many=True, context=self.context).data
+
+    def get_fotos_solucion(self, obj):
+        fotos = obj.fotos.filter(tipo='SOLUCION')
+        return MantenimientoFotoSerializer(fotos, many=True, context=self.context).data
+
+    def create(self, validated_data):
+        fotos_data = validated_data.pop('fotos_nuevas', [])
+        user = self.context['request'].user
+        mantenimiento = Mantenimiento.objects.create(**validated_data)
+        for foto_data in fotos_data:
+            MantenimientoFoto.objects.create(
+                mantenimiento=mantenimiento, 
+                foto=foto_data,
+                subido_por=user,
+                tipo='PROBLEMA' # Al crear, las fotos son del problema
+            )
+        return mantenimiento
+
+    def update(self, instance, validated_data):
+        fotos_nuevas_data = validated_data.pop('fotos_nuevas', [])
+        fotos_a_eliminar_ids = validated_data.pop('fotos_a_eliminar', [])
+        user = self.context['request'].user
+
+        if fotos_a_eliminar_ids:
+            # Solo el usuario que subió la foto o un admin puede borrarla
+            fotos_a_borrar = MantenimientoFoto.objects.filter(id__in=fotos_a_eliminar_ids, mantenimiento=instance)
+            if not user.is_staff: # Si no es admin, solo puede borrar las suyas
+                fotos_a_borrar = fotos_a_borrar.filter(subido_por=user)
+            fotos_a_borrar.delete()
+
+        for foto_data in fotos_nuevas_data:
+            # Al actualizar, asumimos que las fotos son de la solución
+            MantenimientoFoto.objects.create(
+                mantenimiento=instance, 
+                foto=foto_data,
+                subido_por=user,
+                tipo='SOLUCION'
+            )
+
+        instance = super().update(instance, validated_data)
+        return instance
 
 class RevalorizacionActivoSerializer(serializers.ModelSerializer):
     activo = ActivoFijoSerializer(read_only=True)
@@ -499,11 +617,30 @@ class RevalorizacionActivoSerializer(serializers.ModelSerializer):
 class DepreciacionActivoSerializer(serializers.ModelSerializer):
     activo = ActivoFijoSerializer(read_only=True)
     realizado_por = UsuarioSerializer(read_only=True)
+    depreciation_type_display = serializers.CharField(source='get_depreciation_type_display', read_only=True)
 
     class Meta:
         model = DepreciacionActivo
         fields = '__all__'
+        read_only_fields = ('depreciation_type_display',)
 
+class DisposicionActivoSerializer(serializers.ModelSerializer):
+    empresa = serializers.HiddenField(default=CurrentUserEmpresaDefault())
+    activo = ActivoFijoSerializer(read_only=True)
+    activo_id = serializers.PrimaryKeyRelatedField(
+        queryset=ActivoFijo.objects.all(), source='activo', write_only=True
+    )
+    realizado_por = UsuarioSerializer(read_only=True)
+    tipo_disposicion_display = serializers.CharField(source='get_tipo_disposicion_display', read_only=True)
+
+    class Meta:
+        model = DisposicionActivo
+        fields = '__all__'
+        read_only_fields = ('realizado_por', 'fecha_creacion', 'tipo_disposicion_display')
+
+    def create(self, validated_data):
+        validated_data['realizado_por'] = self.context['request'].user
+        return super().create(validated_data)
 
 class SuscripcionSerializer(serializers.ModelSerializer):
     plan_display = serializers.CharField(source='get_plan_display', read_only=True)

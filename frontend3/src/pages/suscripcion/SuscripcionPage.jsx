@@ -59,7 +59,7 @@ export default function SuscripcionPage() {
                 throw new Error('No se encontró información de la suscripción.');
             }
 
-            const dashboardRes = await apiClient.get('/dashboard-data/');
+            const dashboardRes = await apiClient.get('/dashboard/');
             setDashboardData(dashboardRes.data);
 
         } catch (err) {

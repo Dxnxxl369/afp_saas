@@ -119,6 +119,22 @@ class AppDrawer extends StatelessWidget {
         pageKey: 'empleados',
       ));
     }
+    if (auth.hasPermission('view_proveedor')) {
+      settingsItems.add(_buildDrawerItem(
+        context: context,
+        icon: LucideIcons.truck,
+        title: 'Proveedores',
+        pageKey: 'proveedores',
+      ));
+    }
+    if (auth.hasPermission('view_categoriaactivo')) {
+      settingsItems.add(_buildDrawerItem(
+        context: context,
+        icon: LucideIcons.tag,
+        title: 'Categorías de Activo',
+        pageKey: 'categorias_activo',
+      ));
+    }
     if (auth.hasPermission('view_suscripcion')) {
       settingsItems.add(_buildDrawerItem(
         context: context,

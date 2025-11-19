@@ -1,172 +1,157 @@
-PS C:\Activos Fijos\sprintespecial-con ia\movil> flutter build apk --debug
-Support for Android x86 targets will be removed in the next stable release after 3.27. See https://github.com/flutter/flutter/issues/157543
-for details.
-lib/screens/departamentos_screen.dart:24:36: Error: The getter 'LoadingState' isn't defined for the class '_DepartamentosScreenState'.        
- - '_DepartamentosScreenState' is from 'package:movil/screens/departamentos_screen.dart' ('lib/screens/departamentos_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-      if (provider.loadingState == LoadingState.idle) {
-                                   ^^^^^^^^^^^^
-lib/screens/departamentos_screen.dart:51:40: Error: The getter 'LoadingState' isn't defined for the class '_DepartamentosScreenState'.        
- - '_DepartamentosScreenState' is from 'package:movil/screens/departamentos_screen.dart' ('lib/screens/departamentos_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-          if (provider.loadingState == LoadingState.loading && provider.departamentos.isEmpty) {
-                                       ^^^^^^^^^^^^
-lib/screens/departamentos_screen.dart:54:40: Error: The getter 'LoadingState' isn't defined for the class '_DepartamentosScreenState'.        
- - '_DepartamentosScreenState' is from 'package:movil/screens/departamentos_screen.dart' ('lib/screens/departamentos_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-          if (provider.loadingState == LoadingState.error) {
-                                       ^^^^^^^^^^^^
-lib/screens/departamentos_screen.dart:60:40: Error: The getter 'LoadingState' isn't defined for the class '_DepartamentosScreenState'.        
- - '_DepartamentosScreenState' is from 'package:movil/screens/departamentos_screen.dart' ('lib/screens/departamentos_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-          if (provider.loadingState == LoadingState.success && provider.departamentos.isEmpty) {
-                                       ^^^^^^^^^^^^
-lib/screens/cargos/cargos_screen.dart:23:36: Error: The getter 'LoadingState' isn't defined for the class '_CargosScreenState'.
- - '_CargosScreenState' is from 'package:movil/screens/cargos/cargos_screen.dart' ('lib/screens/cargos/cargos_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-      if (provider.loadingState == LoadingState.idle) {
-                                   ^^^^^^^^^^^^
-lib/screens/cargos/cargos_screen.dart:36:40: Error: The getter 'LoadingState' isn't defined for the class '_CargosScreenState'.
- - '_CargosScreenState' is from 'package:movil/screens/cargos/cargos_screen.dart' ('lib/screens/cargos/cargos_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-          if (provider.loadingState == LoadingState.loading && provider.cargos.isEmpty) {
-                                       ^^^^^^^^^^^^
-lib/screens/cargos/cargos_screen.dart:39:40: Error: The getter 'LoadingState' isn't defined for the class '_CargosScreenState'.
- - '_CargosScreenState' is from 'package:movil/screens/cargos/cargos_screen.dart' ('lib/screens/cargos/cargos_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-          if (provider.loadingState == LoadingState.error) {
-                                       ^^^^^^^^^^^^
-lib/screens/cargos/cargos_screen.dart:45:40: Error: The getter 'LoadingState' isn't defined for the class '_CargosScreenState'.
- - '_CargosScreenState' is from 'package:movil/screens/cargos/cargos_screen.dart' ('lib/screens/cargos/cargos_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-          if (provider.loadingState == LoadingState.success && provider.cargos.isEmpty) {
-                                       ^^^^^^^^^^^^
-lib/screens/ubicaciones/ubicaciones_screen.dart:23:36: Error: The getter 'LoadingState' isn't defined for the class '_UbicacionesScreenState'.
- - '_UbicacionesScreenState' is from 'package:movil/screens/ubicaciones/ubicaciones_screen.dart' ('lib/screens/ubicaciones/ubicaciones_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-      if (provider.loadingState == LoadingState.idle) {
-                                   ^^^^^^^^^^^^
-lib/screens/ubicaciones/ubicaciones_screen.dart:36:40: Error: The getter 'LoadingState' isn't defined for the class '_UbicacionesScreenState'.
- - '_UbicacionesScreenState' is from 'package:movil/screens/ubicaciones/ubicaciones_screen.dart' ('lib/screens/ubicaciones/ubicaciones_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-          if (provider.loadingState == LoadingState.loading && provider.ubicaciones.isEmpty) {
-                                       ^^^^^^^^^^^^
-lib/screens/ubicaciones/ubicaciones_screen.dart:39:40: Error: The getter 'LoadingState' isn't defined for the class '_UbicacionesScreenState'.
- - '_UbicacionesScreenState' is from 'package:movil/screens/ubicaciones/ubicaciones_screen.dart' ('lib/screens/ubicaciones/ubicaciones_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-          if (provider.loadingState == LoadingState.error) {
-                                       ^^^^^^^^^^^^
-lib/screens/ubicaciones/ubicaciones_screen.dart:45:40: Error: The getter 'LoadingState' isn't defined for the class '_UbicacionesScreenState'.
- - '_UbicacionesScreenState' is from 'package:movil/screens/ubicaciones/ubicaciones_screen.dart' ('lib/screens/ubicaciones/ubicaciones_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-          if (provider.loadingState == LoadingState.success && provider.ubicaciones.isEmpty) {
-                                       ^^^^^^^^^^^^
-lib/screens/estados/estados_screen.dart:23:36: Error: The getter 'LoadingState' isn't defined for the class '_EstadosScreenState'.
- - '_EstadosScreenState' is from 'package:movil/screens/estados/estados_screen.dart' ('lib/screens/estados/estados_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-      if (provider.loadingState == LoadingState.idle) {
-                                   ^^^^^^^^^^^^
-lib/screens/estados/estados_screen.dart:36:40: Error: The getter 'LoadingState' isn't defined for the class '_EstadosScreenState'.
- - '_EstadosScreenState' is from 'package:movil/screens/estados/estados_screen.dart' ('lib/screens/estados/estados_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-          if (provider.loadingState == LoadingState.loading && provider.estados.isEmpty) {
-                                       ^^^^^^^^^^^^
-lib/screens/estados/estados_screen.dart:39:40: Error: The getter 'LoadingState' isn't defined for the class '_EstadosScreenState'.
- - '_EstadosScreenState' is from 'package:movil/screens/estados/estados_screen.dart' ('lib/screens/estados/estados_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-          if (provider.loadingState == LoadingState.error) {
-                                       ^^^^^^^^^^^^
-lib/screens/estados/estados_screen.dart:45:40: Error: The getter 'LoadingState' isn't defined for the class '_EstadosScreenState'.
- - '_EstadosScreenState' is from 'package:movil/screens/estados/estados_screen.dart' ('lib/screens/estados/estados_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-          if (provider.loadingState == LoadingState.success && provider.estados.isEmpty) {
-                                       ^^^^^^^^^^^^
-lib/screens/activos/activos_screen.dart:30:24: Error: The getter 'isLoading' isn't defined for the class 'ActivoFijoProvider'.
- - 'ActivoFijoProvider' is from 'package:movil/providers/activo_fijo_provider.dart' ('lib/providers/activo_fijo_provider.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'isLoading'.
-          if (provider.isLoading) {
-                       ^^^^^^^^^
-lib/screens/activos/activos_screen.dart:34:24: Error: The getter 'error' isn't defined for the class 'ActivoFijoProvider'.
- - 'ActivoFijoProvider' is from 'package:movil/providers/activo_fijo_provider.dart' ('lib/providers/activo_fijo_provider.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'error'.
-          if (provider.error != null) {
-                       ^^^^^
-lib/screens/activos/activos_screen.dart:35:58: Error: The getter 'error' isn't defined for the class 'ActivoFijoProvider'.
- - 'ActivoFijoProvider' is from 'package:movil/providers/activo_fijo_provider.dart' ('lib/providers/activo_fijo_provider.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'error'.
-            return Center(child: Text('Error: ${provider.error}'));
-                                                         ^^^^^
-lib/screens/mantenimiento/mantenimiento_screen.dart:27:36: Error: The getter 'LoadingState' isn't defined for the class '_MantenimientoScreenState'.
- - '_MantenimientoScreenState' is from 'package:movil/screens/mantenimiento/mantenimiento_screen.dart' ('lib/screens/mantenimiento/mantenimiento_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-      if (provider.loadingState == LoadingState.idle) {
-                                   ^^^^^^^^^^^^
-lib/screens/mantenimiento/mantenimiento_screen.dart:40:40: Error: The getter 'LoadingState' isn't defined for the class '_MantenimientoScreenState'.
- - '_MantenimientoScreenState' is from 'package:movil/screens/mantenimiento/mantenimiento_screen.dart' ('lib/screens/mantenimiento/mantenimiento_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-          if (provider.loadingState == LoadingState.loading && provider.mantenimientos.isEmpty) {
-                                       ^^^^^^^^^^^^
-lib/screens/mantenimiento/mantenimiento_screen.dart:43:40: Error: The getter 'LoadingState' isn't defined for the class '_MantenimientoScreenState'.
- - '_MantenimientoScreenState' is from 'package:movil/screens/mantenimiento/mantenimiento_screen.dart' ('lib/screens/mantenimiento/mantenimiento_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-          if (provider.loadingState == LoadingState.error) {
-                                       ^^^^^^^^^^^^
-lib/screens/mantenimiento/mantenimiento_screen.dart:49:40: Error: The getter 'LoadingState' isn't defined for the class '_MantenimientoScreenState'.
- - '_MantenimientoScreenState' is from 'package:movil/screens/mantenimiento/mantenimiento_screen.dart' ('lib/screens/mantenimiento/mantenimiento_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-          if (provider.loadingState == LoadingState.success && provider.mantenimientos.isEmpty) {
-                                       ^^^^^^^^^^^^
-lib/screens/mantenimiento/mantenimiento_screen.dart:141:43: Error: The getter 'LoadingState' isn't defined for the class '_MantenimientoScreenState'.
- - '_MantenimientoScreenState' is from 'package:movil/screens/mantenimiento/mantenimiento_screen.dart' ('lib/screens/mantenimiento/mantenimiento_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-        if(activoProvider.loadingState == LoadingState.idle) activoProvider.fetchActivos();
-                                          ^^^^^^^^^^^^
-lib/screens/mantenimiento/mantenimiento_screen.dart:144:45: Error: The getter 'LoadingState' isn't defined for the class '_MantenimientoScreenState'.
- - '_MantenimientoScreenState' is from 'package:movil/screens/mantenimiento/mantenimiento_screen.dart' ('lib/screens/mantenimiento/mantenimiento_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-        if(empleadoProvider.loadingState == LoadingState.idle) empleadoProvider.fetchEmpleados();
-                                            ^^^^^^^^^^^^
-lib/screens/mantenimiento/mantenimiento_screen.dart:158:52: Error: The getter 'LoadingState' isn't defined for the class '_MantenimientoScreenState'.
- - '_MantenimientoScreenState' is from 'package:movil/screens/mantenimiento/mantenimiento_screen.dart' ('lib/screens/mantenimiento/mantenimiento_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-                      if (provider.loadingState == LoadingState.loading) {
-                                                   ^^^^^^^^^^^^
-lib/screens/mantenimiento/mantenimiento_screen.dart:180:52: Error: The getter 'LoadingState' isn't defined for the class '_MantenimientoScreenState'.
- - '_MantenimientoScreenState' is from 'package:movil/screens/mantenimiento/mantenimiento_screen.dart' ('lib/screens/mantenimiento/mantenimiento_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-                      if (provider.loadingState == LoadingState.loading) {
-                                                   ^^^^^^^^^^^^
-lib/screens/suscripcion/suscripcion_screen.dart:22:36: Error: The getter 'LoadingState' isn't defined for the class '_SuscripcionScreenState'.
- - '_SuscripcionScreenState' is from 'package:movil/screens/suscripcion/suscripcion_screen.dart' ('lib/screens/suscripcion/suscripcion_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-      if (provider.loadingState == LoadingState.idle) {
-                                   ^^^^^^^^^^^^
-lib/screens/suscripcion/suscripcion_screen.dart:33:40: Error: The getter 'LoadingState' isn't defined for the class '_SuscripcionScreenState'.
- - '_SuscripcionScreenState' is from 'package:movil/screens/suscripcion/suscripcion_screen.dart' ('lib/screens/suscripcion/suscripcion_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-          if (provider.loadingState == LoadingState.loading) {
-                                       ^^^^^^^^^^^^
-lib/screens/suscripcion/suscripcion_screen.dart:36:40: Error: The getter 'LoadingState' isn't defined for the class '_SuscripcionScreenState'.
- - '_SuscripcionScreenState' is from 'package:movil/screens/suscripcion/suscripcion_screen.dart' ('lib/screens/suscripcion/suscripcion_screen.dart').
-Try correcting the name to the name of an existing getter, or defining a getter or field named 'LoadingState'.
-          if (provider.loadingState == LoadingState.error) {
-                                       ^^^^^^^^^^^^
-Target kernel_snapshot_program failed: Exception
+# Flujo de Depuración para el Módulo de Presupuestos
 
+Este flujo te guiará paso a paso para reproducir el problema de la actualización del `monto_gastado` en una `PartidaPresupuestaria` y nos permitirá observar los logs de depuración.
 
-FAILURE: Build failed with an exception.
+**PRE-REQUISITO IMPORTANTE:**
+Asegúrate de que tu servidor backend esté **reiniciado** con los logs de depuración que añadí en `backend/api/views.py`.
+Comando para reiniciar: `backend/venv/Scripts/python.exe backend/manage.py runserver`
 
-* What went wrong:
-Execution failed for task ':app:compileFlutterBuildDebug'.
-> Process 'command 'C:\flutter\bin\flutter.bat'' finished with non-zero exit value 1
+---
 
-* Try:
-> Run with --stacktrace option to get the stack trace.
-> Run with --info or --debug option to get more log output.
-> Run with --scan to get full insights.
-> Get more help at https://help.gradle.org.
+**PASO 1: Crear un Departamento (si no tienes uno)**
 
-BUILD FAILED in 10s
-Running Gradle task 'assembleDebug'...                             11,2s
-Gradle task assembleDebug failed with exit code 1
-PS C:\Activos Fijos\sprintespecial-con ia\movil> 
+Necesitamos un departamento para la partida presupuestaria.
+*   **Método:** POST
+*   **URL:** `/api/departamentos/`
+*   **Body (JSON):**
+    ```json
+    {
+        "nombre": "Departamento de TI"
+    }
+    ```
+*   **Acción:** Ejecuta esta solicitud. Si ya tienes un departamento, anota su `id`. Si lo creas, anota el `id` del departamento creado.
+
+---
+
+**PASO 2: Crear un Período Presupuestario**
+
+*   **Método:** POST
+*   **URL:** `/api/periodos-presupuestarios/`
+*   **Body (JSON):**
+    ```json
+    {
+        "nombre": "Presupuesto Anual 2025",
+        "fecha_inicio": "2025-01-01",
+        "fecha_fin": "2025-12-31",
+        "estado": "ACTIVO"
+    }
+    ```
+*   **Acción:** Ejecuta esta solicitud. Anota el `id` del `PeriodoPresupuestario` creado.
+
+---
+
+**PASO 3: Crear una Partida Presupuestaria**
+
+Vamos a crear una partida para "Muebles de Oficina".
+*   **Método:** POST
+*   **URL:** `/api/partidas-presupuestarias/`
+*   **Body (JSON):**
+    ```json
+    {
+        "periodo_id": "ID_DEL_PERIODO_CREADO_EN_PASO_2",
+        "departamento_id": "ID_DEL_DEPARTAMENTO_CREADO_EN_PASO_1",
+        "nombre": "Muebles de Oficina",
+        "codigo": "MUEB-001",
+        "monto_asignado": "3500.00"
+    }
+    ```
+*   **Acción:** Ejecuta esta solicitud. **Asegúrate de reemplazar `ID_DEL_PERIODO_CREADO_EN_PASO_2` y `ID_DEL_DEPARTAMENTO_CREADO_EN_PASO_1` con los IDs reales.** Anota el `id` de la `PartidaPresupuestaria` creada.
+
+---
+
+**PASO 4: Verificar la Partida Presupuestaria (Inicial)**
+
+Antes de la compra, verifica el estado inicial de la partida.
+*   **Método:** GET
+*   **URL:** `/api/partidas-presupuestarias/ID_DE_LA_PARTIDA_CREADA_EN_PASO_3/`
+*   **Acción:** Ejecuta esta solicitud. **Asegúrate de reemplazar `ID_DE_LA_PARTIDA_CREADA_EN_PASO_3` con el ID real.**
+    *   **Esperado:** `monto_gastado` debe ser "0.00", `monto_disponible` debe ser "3500.00".
+*   **Por favor, copia y pega la respuesta JSON de esta solicitud aquí.**
+
+---
+
+**PASO 5: Crear una Solicitud de Compra**
+
+Solicitamos una "Mesa de Oficina" por 500.
+*   **Método:** POST
+*   **URL:** `/api/solicitudes-compra/`
+*   **Body (JSON):**
+    ```json
+    {
+        "descripcion": "Mesa de Oficina para Gerencia",
+        "costo_estimado": "500.00",
+        "departamento_id": "ID_DEL_DEPARTAMENTO_CREADO_EN_PASO_1",
+        "partida_presupuestaria_id": "ID_DE_LA_PARTIDA_CREADA_EN_PASO_3"
+    }
+    ```
+*   **Acción:** Ejecuta esta solicitud. **Asegúrate de reemplazar los IDs.** Anota el `id` de la `SolicitudCompra` creada.
+
+---
+
+**PASO 6: Aprobar la Solicitud de Compra**
+
+*   **Método:** POST
+*   **URL:** `/api/solicitudes-compra/ID_DE_LA_SOLICITUD_CREADA_EN_PASO_5/decidir/`
+*   **Body (JSON):**
+    ```json
+    {
+        "decision": "aprobar"
+    }
+    ```
+*   **Acción:** Ejecuta esta solicitud. **Asegúrate de reemplazar `ID_DE_LA_SOLICITUD_CREADA_EN_PASO_5` con el ID real.**
+
+---
+
+**PASO 7: Crear una Orden de Compra**
+
+*   **Método:** POST
+*   **URL:** `/api/ordenes-compra/`
+*   **Body (JSON):**
+    ```json
+    {
+        "solicitud_id": "ID_DE_LA_SOLICITUD_CREADA_EN_PASO_5",
+        "proveedor_id": "ID_DE_UN_PROVEEDOR_EXISTENTE_O_CREA_UNO",
+        "precio_final": "500.00",
+        "fecha_entrega_estimada": "2025-12-15"
+    }
+    ```
+*   **Acción:** Ejecuta esta solicitud. **Asegúrate de reemplazar los IDs.**
+    *   **Nota:** Si no tienes un proveedor, crea uno primero (`/api/proveedores/` con `{"nombre": "Mueblerias S.A.", "contacto": "info@mueblerias.com"}`). Anota el `id` de la `OrdenCompra` creada.
+
+---
+
+**PASO 8: Ejecutar la Acción `recibir` en la Orden de Compra**
+
+Aquí es donde esperamos que se actualice el `monto_gastado`.
+*   **Método:** POST
+*   **URL:** `/api/ordenes-compra/ID_DE_LA_ORDEN_CREADA_EN_PASO_7/recibir/`
+*   **Body (JSON):**
+    ```json
+    {
+        "categoria_id": "ID_DE_UNA_CATEGORIA_EXISTENTE_O_CREA_UNA",
+        "estado_id": "ID_DE_UN_ESTADO_EXISTENTE_O_CREA_UNO",
+        "ubicacion_id": "ID_DE_UNA_UBICACION_EXISTENTE_O_CREA_UNA",
+        "vida_util": 5
+    }
+    ```
+*   **Acción:** Ejecuta esta solicitud. **Asegúrate de reemplazar los IDs.**
+    *   **Nota:** Si no tienes Categoría, Estado o Ubicación, crea uno primero.
+        *   Categoría: `/api/categorias-activo/` con `{"nombre": "Muebles"}`
+        *   Estado: `/api/estados/` con `{"nombre": "Nuevo"}`
+        *   Ubicación: `/api/ubicaciones/` con `{"nombre": "Oficina Principal"}`
+*   **¡IMPORTANTE! Después de ejecutar esta solicitud, copia y pega TODO el output de la consola de tu servidor backend aquí.**
+
+---
+
+**PASO 9: Verificar la Partida Presupuestaria (Final)**
+
+Verifica el estado final de la partida después de la compra.
+*   **Método:** GET
+*   **URL:** `/api/partidas-presupuestarias/ID_DE_LA_PARTIDA_CREADA_EN_PASO_3/`
+*   **Acción:** Ejecuta esta solicitud. **Asegúrate de reemplazar `ID_DE_LA_PARTIDA_CREADA_EN_PASO_3` con el ID real.**
+    *   **Esperado:** `monto_gastado` debe ser "500.00", `monto_disponible` debe ser "3000.00".
+*   **Por favor, copia y pega la respuesta JSON de esta solicitud aquí.**
+
+---
+**FIN DEL FLUJO DE DEPURACIÓN**
+---

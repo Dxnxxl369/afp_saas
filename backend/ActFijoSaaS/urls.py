@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.urls import path, include
 
 # --- [ NUEVO: Imports necesarios ] ---
-from django.conf import settings
+# from django.conf import settings # COMENTADO TEMPORALMENTE PARA DEBUG
 from django.conf.urls.static import static
 # --- [ FIN NUEVO ] ---
 
@@ -14,6 +14,6 @@ urlpatterns = [
 
 # --- [ NUEVO: Añadir esta línea al FINAL ] ---
 # Sirve los archivos de MEDIA (fotos subidas) SOLO en modo DEBUG (DEBUG=True)
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# if settings.DEBUG: # COMENTADO TEMPORALMENTE PARA DEBUG
+#     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 # --- [ FIN NUEVO ] ---

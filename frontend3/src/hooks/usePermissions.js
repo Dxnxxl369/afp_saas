@@ -190,6 +190,7 @@ const moduleViewPermissions = {
     'mantenimientos': 'view_mantenimiento',
     'revalorizaciones': 'view_revalorizacion',
     'depreciaciones': 'view_depreciacion',
+    // 'disposiciones': 'view_disposicion', // REMOVED: Custom logic below
     'solicitudes_compra': 'view_solicitud_compra',
     'ordenes_compra': 'view_orden_compra',
     'suscripcion': 'view_suscripcion',
@@ -237,8 +238,6 @@ export const usePermissions = () => {
                 // Optionally add a flag for superadmin if needed elsewhere
                 // permissionsSet.add('is_superuser'); 
                 console.log("User is SuperAdmin, skipping individual permission fetch.");
-            } else {
-                 console.log("User is not authenticated, no permissions to fetch.");
             }
             
             console.log(`Permissions loaded for user (Roles: ${userRoles.join(', ')}):`, Array.from(permissionsSet));
@@ -273,6 +272,11 @@ export const usePermissions = () => {
     }
 
     const canAccess = (moduleName) => {
+        // WORKAROUND: For 'disposiciones' module, check manage_disposicion instead of view_disposicion
+        if (moduleName.toLowerCase() === 'disposiciones') {
+            return userPermissions.has('manage_disposicion');
+        }
+
         // Find the required view permission for this module
         const requiredPermission = moduleViewPermissions[moduleName.toLowerCase()];
 

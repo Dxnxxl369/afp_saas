@@ -100,4 +100,5 @@ admin.site.register(Mantenimiento)
 admin.site.register(Suscripcion)
 admin.site.register(RevalorizacionActivo)
 admin.site.register(DepreciacionActivo)
+admin.site.register(MantenimientoFoto)
 # ... y así registrarías el resto de tus modelos si los tuvieras

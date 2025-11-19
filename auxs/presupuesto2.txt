@@ -1,0 +1,112 @@
+# Flujo de Uso del Módulo de Presupuestos (Actualizado)
+
+Este documento describe el flujo de trabajo para la gestión de presupuestos en el sistema, desde la creación de períodos hasta la asignación de partidas y su integración con el proceso de adquisición de activos, incluyendo las nuevas funcionalidades implementadas.
+
+## 1. Roles y Permisos Necesarios
+
+Para gestionar el módulo de presupuestos, el usuario debe tener el permiso `manage_presupuesto`. Este permiso permite:
+*   Crear, editar y eliminar Períodos Presupuestarios.
+*   Crear, editar y eliminar Partidas Presupuestarias.
+*   Ver todos los detalles de presupuestos, incluyendo montos asignados, gastados, disponibles, ahorro/sobregasto.
+
+## 2. Flujo General del Módulo de Presupuestos
+
+El módulo de presupuestos permite a las empresas planificar, asignar y controlar sus gastos. Se estructura en Períodos (contenedores de tiempo) y Partidas (líneas de gasto específicas). Está integrado con el flujo de adquisición de activos para un control automático de los gastos.
+
+## 3. Gestión de Períodos Presupuestarios
+
+Los períodos presupuestarios son los contenedores principales para organizar tus presupuestos por rangos de tiempo (ej. anual, trimestral).
+
+*   **Acceder al Módulo:**
+    *   En el menú lateral (AppDrawer), haz clic en "Presupuestos".
+    *   Verás una tabla con los períodos presupuestarios existentes.
+
+*   **Crear un Nuevo Período:**
+    *   Haz clic en el botón "+ Nuevo Período" (visible si tienes el permiso `manage_presupuesto`).
+    *   Se abrirá un formulario modal.
+    *   **Nombre:** Asigna un nombre descriptivo (ej. "Presupuesto Anual 2025", "Presupuesto Q1 2026").
+    *   **Fecha de Inicio:** Selecciona la fecha de inicio del período.
+    *   **Fecha de Fin:** Selecciona la fecha de fin del período.
+    *   **Estado:** Elige el estado inicial (normalmente "Planificación").
+        *   `PLANIFICACION`: El período está en diseño, no se pueden realizar movimientos.
+        *   `ACTIVO`: El período está vigente, se pueden realizar movimientos presupuestarios.
+        *   `CERRADO`: El período ha finalizado, no se pueden realizar más movimientos.
+    *   Haz clic en "Guardar". El nuevo período aparecerá en la tabla.
+
+*   **Editar un Período Existente:**
+    *   En la tabla de períodos, haz clic en el icono de lápiz (<Edit />) junto al período que deseas editar.
+    *   Se abrirá el formulario modal con los datos precargados.
+    *   Realiza los cambios necesarios y haz clic en "Guardar".
+
+*   **Eliminar un Período:**
+    *   En la tabla de períodos, haz clic en el icono de papelera (<Trash2 />) junto al período que deseas eliminar.
+    *   Confirma la eliminación. Ten en cuenta que esto eliminará también todas las partidas presupuestarias asociadas.
+
+*   **NUEVO: Comportamiento del `monto_total` del Período:**
+    *   El campo `monto_total` de un `PeriodoPresupuestario` ahora se **calcula automáticamente**.
+    *   Cada vez que creas, editas o eliminas una `Partida Presupuestaria` asociada a un período, el sistema recalcula la suma de los `monto_asignado` de todas las partidas de ese período y actualiza el `monto_total` del `PeriodoPresupuestario` padre.
+
+*   **NUEVO: Comportamiento del `estado` del Período (Cierre Automático):**
+    *   El sistema ahora incluye una tarea programada (comando de gestión `check_periodo_status`) que se ejecuta periódicamente.
+    *   Esta tarea revisa todos los `PeriodoPresupuestario` que están en estado `ACTIVO`.
+    *   Si la `fecha_fin` de un período `ACTIVO` ya ha pasado (es decir, es anterior a la fecha actual), el sistema **cambiará automáticamente su estado a `CERRADO`**.
+    *   Esto asegura que los presupuestos se cierren de forma oportuna sin intervención manual.
+
+## 4. Gestión de Partidas Presupuestarias dentro de un Período
+
+Las partidas presupuestarias son las líneas específicas de tu presupuesto, asignadas a departamentos y con un monto definido.
+
+*   **Acceder a las Partidas de un Período:**
+    *   En la tabla de períodos presupuestarios, haz clic en cualquier fila de un período.
+    *   Esto te llevará a una vista detallada de ese período, mostrando una tabla de sus partidas presupuestarias.
+    *   Verás el nombre del período y un botón "Volver a Períodos" para regresar a la lista principal.
+
+*   **Crear una Nueva Partida:**
+    *   En la vista de partidas de un período, haz clic en el botón "+ Nueva Partida".
+    *   Se abrirá un formulario modal.
+    *   **Nombre:** Asigna un nombre descriptivo (ej. "Material de Oficina", "Software de Diseño", "Mantenimiento de Equipos").
+    *   **Departamento:** Selecciona el departamento al que se asigna esta partida.
+    *   **Monto Asignado:** Ingresa el monto total asignado a esta partida.
+    *   Haz clic en "Guardar". La nueva partida aparecerá en la tabla.
+
+*   **Editar una Partida Existente:**
+    *   En la tabla de partidas, haz clic en el icono de lápiz (<Edit />) junto a la partida que deseas editar.
+    *   Se abrirá el formulario modal con los datos precargados.
+    *   Realiza los cambios necesarios y haz clic en "Guardar".
+
+*   **Eliminar una Partida:**
+    *   En la tabla de partidas, haz clic en el icono de papelera (<Trash2 />) junto a la partida que deseas eliminar.
+    *   Confirma la eliminación.
+
+## 5. Integración con el Flujo de Adquisición de Activos
+
+El módulo de presupuestos está integrado con el proceso de adquisición para controlar los gastos.
+
+*   **Solicitud de Compra:**
+    *   Al crear o editar una `Solicitud de Compra`, ahora encontrarás un campo para seleccionar la **"Partida Presupuestaria"** a la que se imputará el gasto.
+    *   Es crucial seleccionar la partida correcta para que el sistema pueda rastrear el presupuesto.
+
+*   **Orden de Compra y Movimientos Presupuestarios:**
+    *   Cuando una `Orden de Compra` asociada a una `Solicitud de Compra` (que tiene una `Partida Presupuestaria` asignada) es marcada como **"Recibida"** (mediante la acción `recibir` en el backend o el botón correspondiente en el frontend), ocurren dos cosas automáticamente:
+        1.  Se crea un `ActivoFijo` en el sistema.
+        2.  Se genera un `MovimientoPresupuestario` que registra el gasto contra la `Partida Presupuestaria` seleccionada.
+        3.  El campo `monto_gastado` de la `PartidaPresupuestaria` se actualiza, reflejando el dinero ya comprometido/gastado.
+
+## 6. NUEVO: Visualización de Reportes y Métricas (Ahorro/Sobregasto)
+
+Ahora, al consultar los detalles de un `PeriodoPresupuestario` (por ejemplo, a través de la API o en una futura interfaz de reportes), podrás ver métricas clave:
+
+*   **`monto_total`:** El monto total asignado a este período (suma de todas sus partidas).
+*   **`total_gastado_periodo`:** El monto total gastado en este período (suma de `monto_gastado` de todas sus partidas).
+*   **`ahorro_o_sobregasto`:** La diferencia entre `monto_total` y `total_gastado_periodo`.
+    *   Un valor positivo indica **ahorro**.
+    *   Un valor negativo indica **sobregasto**.
+
+Estas métricas proporcionan una visión clara del rendimiento financiero del período presupuestario.
+
+## 7. Consideraciones Importantes:
+
+*   **Permisos:** Asegúrate de tener los permisos adecuados (`manage_presupuesto`) para crear, editar y eliminar períodos y partidas.
+*   **Estados del Período:** Solo se pueden realizar movimientos presupuestarios (gastos) en períodos con estado "ACTIVO". Los períodos "CERRADO" no permiten nuevos gastos.
+*   **Consistencia:** La correcta asignación de partidas en las solicitudes de compra es fundamental para mantener la integridad del presupuesto.
+*   **Ejecución de Tarea Programada:** Para que el cierre automático de períodos funcione, el comando de gestión `check_periodo_status` debe ser ejecutado periódicamente en el servidor (ej. mediante un cron job).

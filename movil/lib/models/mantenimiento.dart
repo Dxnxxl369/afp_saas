@@ -1,6 +1,7 @@
 // lib/models/mantenimiento.dart
 import 'activo_fijo.dart';
 import 'empleado.dart';
+import 'mantenimiento_foto.dart';
 
 class Mantenimiento {
   final String id;
@@ -13,6 +14,8 @@ class Mantenimiento {
   final double costo;
   final ActivoFijo activo;
   final EmpleadoSimple? empleadoAsignado;
+  final List<MantenimientoFoto> fotosProblema;
+  final List<MantenimientoFoto> fotosSolucion;
 
   Mantenimiento({
     required this.id,
@@ -25,9 +28,17 @@ class Mantenimiento {
     required this.costo,
     required this.activo,
     this.empleadoAsignado,
+    this.fotosProblema = const [],
+    this.fotosSolucion = const [],
   });
 
   factory Mantenimiento.fromJson(Map<String, dynamic> json) {
+    var fotosProblemaList = json['fotos_problema'] as List? ?? [];
+    List<MantenimientoFoto> fotosProblema = fotosProblemaList.map((i) => MantenimientoFoto.fromJson(i)).toList();
+    
+    var fotosSolucionList = json['fotos_solucion'] as List? ?? [];
+    List<MantenimientoFoto> fotosSolucion = fotosSolucionList.map((i) => MantenimientoFoto.fromJson(i)).toList();
+
     return Mantenimiento(
       id: json['id'],
       tipo: json['tipo'],
@@ -41,6 +52,8 @@ class Mantenimiento {
       empleadoAsignado: json['empleado_asignado'] != null
           ? EmpleadoSimple.fromJson(json['empleado_asignado'])
           : null,
+      fotosProblema: fotosProblema,
+      fotosSolucion: fotosSolucion,
     );
   }
 }

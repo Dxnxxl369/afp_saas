@@ -1,5 +1,6 @@
 // lib/providers/mantenimiento_provider.dart
 import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/mantenimiento.dart';
 import '../services/api_service.dart';
 import 'provider_state.dart';
@@ -30,9 +31,9 @@ class MantenimientoProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> createMantenimiento(Map<String, dynamic> data) async {
+  Future<bool> createMantenimiento(Map<String, dynamic> data, List<XFile> newPhotos) async {
     try {
-      final nuevoMantenimiento = await _apiService.createMantenimiento(data);
+      final nuevoMantenimiento = await _apiService.createMantenimiento(data, newPhotos);
       _mantenimientos.add(nuevoMantenimiento);
       notifyListeners();
       return true;
@@ -43,9 +44,9 @@ class MantenimientoProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> updateMantenimiento(String id, Map<String, dynamic> data) async {
+  Future<bool> updateMantenimiento(String id, Map<String, dynamic> data, List<XFile> newPhotos, List<String> deletedPhotos) async {
      try {
-      final mantenimientoActualizado = await _apiService.updateMantenimiento(id, data);
+      final mantenimientoActualizado = await _apiService.updateMantenimiento(id, data, newPhotos, deletedPhotos);
       final index = _mantenimientos.indexWhere((d) => d.id == id);
       if (index != -1) {
         _mantenimientos[index] = mantenimientoActualizado;
@@ -67,6 +68,26 @@ class MantenimientoProvider with ChangeNotifier {
       return true;
     } catch (e) {
       _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> actualizarEstadoMantenimiento(String id, String estado, String? notas, List<XFile> fotosSolucion) async {
+    _loadingState = LoadingState.loading;
+    notifyListeners();
+    try {
+      final mantenimientoActualizado = await _apiService.actualizarEstadoMantenimiento(id, estado, notas, fotosSolucion);
+      final index = _mantenimientos.indexWhere((m) => m.id == id);
+      if (index != -1) {
+        _mantenimientos[index] = mantenimientoActualizado;
+      }
+      _loadingState = LoadingState.success;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _loadingState = LoadingState.error;
       notifyListeners();
       return false;
     }

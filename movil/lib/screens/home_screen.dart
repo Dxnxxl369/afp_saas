@@ -19,7 +19,10 @@ import 'ordenes_compra/ordenes_screen.dart';
 import 'activos/activos_screen.dart';
 import 'mantenimiento/mantenimiento_screen.dart';
 import 'suscripcion/suscripcion_screen.dart';
-//import 'empleados/empleados_screen.dart';
+import 'empleados/empleados_screen.dart';
+import 'dashboard/dashboard_screen.dart';
+import 'proveedores/proveedores_screen.dart';
+import 'categorias_activo/categorias_activo_screen.dart';
 
 // Convertimos HomeScreen a StatefulWidget para manejar la página seleccionada
 class HomeScreen extends StatefulWidget {
@@ -45,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // Mapa de todas las pantallas/widgets de los módulos
   // La clave (ej: 'dashboard') debe coincidir con la key usada en AppDrawer
   final Map<String, Widget> _pages = {
-    'dashboard': const Center(child: Text('Dashboard (Contenido Principal)')),
+    'dashboard': const DashboardScreen(),
     'departamentos': const DepartamentosScreen(),
     'cargos': const CargosScreen(),
     'ubicaciones': const UbicacionesScreen(),
@@ -53,9 +56,11 @@ class _HomeScreenState extends State<HomeScreen> {
     'presupuestos': const PeriodosScreen(),
     'solicitudes_compra': const SolicitudesScreen(),
     'ordenes_compra': const OrdenesScreen(),
-    //'empleados': const EmpleadosScreen(),
+    'empleados': const EmpleadosScreen(),
     'activos_fijos': const ActivosScreen(),
     'mantenimientos': const MantenimientoScreen(),
+    'proveedores': const ProveedoresScreen(),
+    'categorias_activo': const CategoriasActivoScreen(),
     'suscripcion': const SuscripcionScreen(),
     // ... (Añadir otras pantallas de módulos aquí) ...
   };
@@ -157,9 +162,11 @@ class _HomeScreenState extends State<HomeScreen> {
       case 'presupuestos': return 'Presupuestos';
       case 'solicitudes_compra': return 'Solicitudes de Compra';
       case 'ordenes_compra': return 'Órdenes de Compra';
-      //case: 'empleados': return 'Empleados';
+      case 'empleados': return 'Empleados';
       case 'activos_fijos': return 'Activos Fijos';
       case 'mantenimientos': return 'Mantenimientos';
+      case 'proveedores': return 'Proveedores';
+      case 'categorias_activo': return 'Categorías de Activo';
       case 'suscripcion': return 'Suscripción';
       // ... (añadir otros) ...
       default: return 'ActFijo App';

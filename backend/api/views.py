@@ -333,24 +333,30 @@ class ActivoFijoViewSet(BaseTenantViewSet):
     @action(detail=True, methods=['get'], permission_classes=[AllowAny])
     def qr_code(self, request, pk=None):
         try:
-            # --- [ CAMBIO ] ---
-            # No usamos self.get_object() porque llama a get_queryset,
-            # el cual falla con AnonymousUser.
-            # Obtenemos el activo directamente por su PK (UUID).
-            activo = ActivoFijo.objects.get(pk=pk)
+            # Optimiza la consulta para incluir todos los datos relacionados necesarios
+            activo = ActivoFijo.objects.select_related(
+                'categoria', 'estado', 'ubicacion', 'departamento', 'proveedor'
+            ).get(pk=pk)
             
         except (ActivoFijo.DoesNotExist, ValueError):
-            # Si el activo no existe o el PK no es un UUID válido, devolvemos un 404
             return HttpResponse("Activo no encontrado", status=404)
-        # --- [ FIN DEL CAMBIO ] ---
-            
-        # URL que se codificará en el QR.
-        qr_data = f"/app/activos-fijos/{activo.id}"
+
+        # Construye la cadena de texto con la información del activo
+        qr_data = f"""
+Nombre: {activo.nombre}
+Código: {activo.codigo_interno}
+Valor Actual: {activo.valor_actual} BOB
+Ubicación: {activo.ubicacion.nombre if activo.ubicacion else 'N/A'}
+Departamento: {activo.departamento.nombre if activo.departamento else 'N/A'}
+Categoría: {activo.categoria.nombre if activo.categoria else 'N/A'}
+Adquisición: {activo.fecha_adquisicion.strftime('%d/%m/%Y')}
+Vida Útil: {activo.vida_util} años
+"""
         
-        # Generar el QR en memoria
-        qr_img = qrcode.make(qr_data)
+        # Genera el QR en memoria
+        qr_img = qrcode.make(qr_data.strip())
         
-        # Guardar la imagen en un buffer de bytes
+        # Guarda la imagen en un buffer de bytes
         buffer = io.BytesIO()
         qr_img.save(buffer, format='PNG')
         
@@ -537,6 +543,7 @@ class OrdenCompraViewSet(BaseTenantViewSet):
         estado_id = request.data.get('estado_id')
         ubicacion_id = request.data.get('ubicacion_id')
         vida_util = request.data.get('vida_util')
+        force_overspend = request.data.get('force_overspend', False) # NEW: Get force_overspend flag
 
         if not all([categoria_id, estado_id, ubicacion_id, vida_util]):
             return Response({'detail': 'Se requieren categoria_id, estado_id, ubicacion_id y vida_util para crear el activo.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -561,11 +568,24 @@ class OrdenCompraViewSet(BaseTenantViewSet):
             # --- Integración con Presupuesto ---
             partida = solicitud.partida_presupuestaria
             if partida:
+                logger.info(f"Recibir OrdenCompra {orden.id}: Partida presupuestaria {partida.id} encontrada.")
+                logger.info(f"Recibir OrdenCompra {orden.id}: Precio final de la orden: {orden.precio_final}")
+
                 # Bloquear la partida para evitar race conditions
                 partida = PartidaPresupuestaria.objects.select_for_update().get(pk=partida.pk)
+                logger.info(f"Recibir OrdenCompra {orden.id}: Monto gastado de partida {partida.id} ANTES: {partida.monto_gastado}")
 
-                if partida.monto_disponible < orden.precio_final:
-                    raise serializers.ValidationError(f"El precio final ({orden.precio_final}) excede el monto disponible ({partida.monto_disponible}) en la partida '{partida.nombre}'.")
+                # NEW: Check force_overspend flag
+                if not force_overspend and partida.monto_disponible < orden.precio_final:
+                    logger.warning(f"Recibir OrdenCompra {orden.id}: El precio final ({orden.precio_final}) excede el monto disponible ({partida.monto_disponible}) en la partida '{partida.nombre}'.")
+                    raise serializers.ValidationError(f"El precio final ({orden.precio_final}) excede el monto disponible ({partida.monto_disponible}) en la partida '{partida.nombre}'. Para forzar la recepción, envíe `force_overspend: true`.")
+                elif force_overspend and partida.monto_disponible < orden.precio_final:
+                    logger.warning(f"Recibir OrdenCompra {orden.id}: Forzando sobregasto en partida {partida.id}. Monto disponible: {partida.monto_disponible}, Precio final: {orden.precio_final}.")
+
+                # Check if the associated PeriodoPresupuestario is ACTIVO
+                if partida.periodo.estado != 'ACTIVO':
+                    logger.warning(f"Recibir OrdenCompra {orden.id}: Intento de registrar gasto en partida {partida.id} cuyo período {partida.periodo.id} no está ACTIVO (estado: {partida.periodo.estado}).")
+                    raise serializers.ValidationError(f"No se pueden registrar gastos en la partida '{partida.nombre}' porque su período presupuestario '{partida.periodo.nombre}' no está ACTIVO (estado actual: {partida.periodo.estado}).")
 
                 # Crear el movimiento en el libro de contabilidad del presupuesto
                 MovimientoPresupuestario.objects.create(
@@ -576,10 +596,12 @@ class OrdenCompraViewSet(BaseTenantViewSet):
                     descripcion=f"Compra de activo: {nuevo_activo.nombre}",
                     realizado_por=request.user
                 )
+                logger.info(f"Recibir OrdenCompra {orden.id}: Movimiento presupuestario creado para partida {partida.id}.")
 
                 # Actualizar el monto gastado en la partida
                 partida.monto_gastado += orden.precio_final
                 partida.save(update_fields=['monto_gastado'])
+                logger.info(f"Recibir OrdenCompra {orden.id}: Monto gastado de partida {partida.id} DESPUÉS: {partida.monto_gastado}. Partida guardada.")
 
             # Marcar la orden como completada
             orden.estado = 'COMPLETADA'
@@ -1049,81 +1071,66 @@ class ReporteQueryExportView(ReporteQueryView): # Hereda get_base_queryset
             logger.error(f"Report Query Export Error: {e}", exc_info=True)
             return Response({"detail": f"Error al exportar: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
                 
+from rest_framework.parsers import MultiPartParser, FormParser
 from django.db import transaction
 
 class MantenimientoViewSet(BaseTenantViewSet):
-    queryset = Mantenimiento.objects.all().select_related('activo', 'empleado_asignado__usuario') # Optimizar query
+    queryset = Mantenimiento.objects.all().select_related('activo', 'empleado_asignado__usuario').prefetch_related('fotos') # Optimizar query
     serializer_class = MantenimientoSerializer
     required_manage_permission = 'manage_mantenimiento'
+    parser_classes = (MultiPartParser, FormParser) # Añadir parsers para subida de archivos
 
-    @action(detail=True, methods=['patch'], permission_classes=[IsAuthenticated]) # No necesita permiso especial aquí, validamos adentro
+    @action(detail=True, methods=['post'], url_path='actualizar-estado')
     def actualizar_estado(self, request, pk=None):
         """
-        Permite al empleado asignado actualizar estado, notas y (opcional) foto.
+        Permite al empleado asignado actualizar estado, notas y subir fotos de solución.
+        Acepta multipart/form-data.
         """
         try:
-            mantenimiento = self.get_object() # Obtiene el mantenimiento por ID (pk)
+            mantenimiento = self.get_object()
             empleado_actual = request.user.empleado
 
-            # 1. Verificar si el usuario es el empleado asignado
-            if mantenimiento.empleado_asignado != empleado_actual:
-                # Opcional: Permitir si tiene manage_mantenimiento también? Por ahora no.
-                # checker = HasPermission('manage_mantenimiento')
-                # if not checker.has_object_permission(request, self, mantenimiento):
+            # 1. Verificar si el usuario es el empleado asignado o un admin
+            if mantenimiento.empleado_asignado != empleado_actual and not request.user.is_staff:
                  return Response({'detail': 'No tienes permiso para actualizar este mantenimiento.'},
                                 status=status.HTTP_403_FORBIDDEN)
 
-            # 2. Validar y actualizar solo los campos permitidos
-            # Usamos un serializer simple o validación manual
-            allowed_updates = {}
-            valid = True
-            errors = {}
+            # 2. Validar y actualizar campos de texto
+            nuevo_estado = request.data.get('estado')
+            if nuevo_estado and nuevo_estado not in dict(Mantenimiento.ESTADO_CHOICES).keys():
+                return Response({'estado': 'Estado inválido.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            if 'estado' in request.data:
-                nuevo_estado = request.data['estado']
-                if nuevo_estado not in dict(Mantenimiento.ESTADO_CHOICES).keys():
-                    valid = False; errors['estado'] = 'Estado inválido.'
-                else:
-                    allowed_updates['estado'] = nuevo_estado
-
+            if nuevo_estado:
+                mantenimiento.estado = nuevo_estado
+            
             if 'notas_solucion' in request.data:
-                allowed_updates['notas_solucion'] = request.data['notas_solucion']
-
-            # Aquí podrías añadir lógica para 'foto_evidencia' si la añades al modelo
-
-            if not valid:
-                return Response(errors, status=status.HTTP_400_BAD_REQUEST)
-
-            # Actualizar campos y guardar
-            for field, value in allowed_updates.items():
-                setattr(mantenimiento, field, value)
+                mantenimiento.notas_solucion = request.data['notas_solucion']
 
             # Marcar fecha_fin si el estado es COMPLETADO
-            if allowed_updates.get('estado') == 'COMPLETADO' and not mantenimiento.fecha_fin:
-                 mantenimiento.fecha_fin = timezone.now() # O usar django.utils.timezone
-                 allowed_updates['fecha_fin'] = mantenimiento.fecha_fin # Añadir al log
+            if mantenimiento.estado == 'COMPLETADO' and not mantenimiento.fecha_fin:
+                 mantenimiento.fecha_fin = timezone.now()
 
-            if allowed_updates:
-                 mantenimiento.save(update_fields=allowed_updates.keys())
+            mantenimiento.save()
 
-                 # (Opcional) Crear notificación para el Admin que lo creó/asignó?
-                 # ... Lógica para encontrar al admin y crear Notificacion ...
+            # 3. Procesar fotos de solución subidas
+            fotos_solucion = request.FILES.getlist('fotos_solucion')
+            for foto_data in fotos_solucion:
+                MantenimientoFoto.objects.create(
+                    mantenimiento=mantenimiento,
+                    foto=foto_data,
+                    subido_por=request.user,
+                    tipo='SOLUCION'
+                )
 
-                 # Loguear la acción específica
-                 logAction(f'UPDATE_STATUS: Mantenimiento por {empleado_actual.usuario.username}', {'id': pk, **allowed_updates})
-
-
-            # Devolver el objeto actualizado (o solo un success)
             serializer = self.get_serializer(mantenimiento)
             return Response(serializer.data, status=status.HTTP_200_OK)
-
 
         except Empleado.DoesNotExist:
              return Response({'detail': 'Perfil de empleado no encontrado.'}, status=status.HTTP_400_BAD_REQUEST)
         except Mantenimiento.DoesNotExist:
              return Response({'detail': 'Mantenimiento no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            print(f"ERROR en actualizar_estado: {e}")
+            logger.error(f"Error en MantenimientoViewSet.actualizar_estado: {e}", exc_info=True)
             return Response({'detail': f'Error interno: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
     # --- [NUEVA FUNCIÓN HELPER] ---
@@ -1151,7 +1158,6 @@ class MantenimientoViewSet(BaseTenantViewSet):
     # --- [ MÉTODO EDITADO ] ---
     def perform_create(self, serializer):
         # Primero, guarda el mantenimiento normalmente (asignando la empresa del usuario creador)
-        empleado_creador = self.request.user.empleado
         mantenimiento = serializer.save(empresa=self.request.user.empleado.empresa)
         # Luego, intenta crear la notificación para el asignado (si existe)
         self._crear_notificacion_asignacion(mantenimiento)
@@ -1284,18 +1290,14 @@ class DepreciacionActivoViewSet(BaseTenantViewSet):
             self.permission_denied(request, message=f'Permiso "{self.required_manage_permission}" requerido.')
 
         activo_id = request.data.get('activo_id')
-        monto_str = request.data.get('monto')
+        depreciation_type = request.data.get('depreciation_type', 'MANUAL').upper() # Default a MANUAL
         notas = request.data.get('notas')
 
-        if not all([activo_id, monto_str]):
-            return Response({'detail': 'Se requieren activo_id y monto.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not activo_id:
+            return Response({'detail': 'Se requiere activo_id.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            monto_a_depreciar = Decimal(monto_str)
-            if monto_a_depreciar <= 0:
-                raise ValueError("El monto a depreciar debe ser un número positivo.")
-        except (ValueError, InvalidOperation) as e:
-            return Response({'detail': str(e) or 'El monto proporcionado no es un número válido.'}, status=status.HTTP_400_BAD_REQUEST)
+        if depreciation_type not in [choice[0] for choice in DepreciacionActivo.DEPRECIATION_TYPE_CHOICES]:
+            return Response({'detail': 'Tipo de depreciación inválido.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             with transaction.atomic():
@@ -1309,18 +1311,96 @@ class DepreciacionActivoViewSet(BaseTenantViewSet):
                 )
 
                 valor_anterior = activo.valor_actual
+                monto_depreciado = Decimal(0)
+                
+                # --- Lógica de cálculo por tipo de depreciación ---
+                if depreciation_type == 'MANUAL':
+                    monto_str = request.data.get('monto')
+                    if not monto_str:
+                        return Response({'detail': 'Para depreciación MANUAL, se requiere el monto.'}, status=status.HTTP_400_BAD_REQUEST)
+                    try:
+                        monto_depreciado = Decimal(monto_str)
+                        if monto_depreciado <= 0:
+                            raise ValueError("El monto a depreciar debe ser un número positivo.")
+                    except (ValueError, InvalidOperation) as e:
+                        return Response({'detail': str(e) or 'El monto proporcionado no es un número válido.'}, status=status.HTTP_400_BAD_REQUEST)
 
-                if monto_a_depreciar > valor_anterior:
+                elif depreciation_type == 'STRAIGHT_LINE':
+                    valor_residual_str = request.data.get('valor_residual', '0')
+                    try:
+                        valor_residual = Decimal(valor_residual_str)
+                        if valor_residual < 0:
+                            raise ValueError("El valor residual no puede ser negativo.")
+                    except (ValueError, InvalidOperation) as e:
+                        return Response({'detail': str(e) or 'El valor residual no es un número válido.'}, status=status.HTTP_400_BAD_REQUEST)
+                    
+                    if activo.vida_util <= 0:
+                        return Response({'detail': 'La vida útil del activo debe ser mayor a 0 para depreciación lineal.'}, status=status.HTTP_400_BAD_REQUEST)
+                    
+                    # Usamos el valor actual como costo base para la depreciación lineal
+                    # En un sistema real, se usaría el costo de adquisición original.
+                    base_depreciable = activo.valor_actual - valor_residual
+                    if base_depreciable < 0:
+                        base_depreciable = Decimal(0) # No depreciar por debajo del valor residual
+                    
+                    monto_depreciado = base_depreciable / activo.vida_util # Depreciación anual
+
+                elif depreciation_type == 'DECLINING_BALANCE':
+                    tasa_depreciacion_str = request.data.get('tasa_depreciacion')
+                    if not tasa_depreciacion_str:
+                        return Response({'detail': 'Para depreciación por SALDO DECRECIENTE, se requiere la tasa de depreciación.'}, status=status.HTTP_400_BAD_REQUEST)
+                    try:
+                        tasa_depreciacion = Decimal(tasa_depreciacion_str)
+                        if not (Decimal(0) < tasa_depreciacion <= Decimal(1)): # Tasa entre 0 y 1 (ej: 0.2 para 20%)
+                            raise ValueError("La tasa de depreciación debe estar entre 0 y 1 (ej: 0.2 para 20%).")
+                    except (ValueError, InvalidOperation) as e:
+                        return Response({'detail': str(e) or 'La tasa de depreciación no es un número válido.'}, status=status.HTTP_400_BAD_REQUEST)
+                    
+                    monto_depreciado = activo.valor_actual * tasa_depreciacion
+
+                elif depreciation_type == 'UNITS_OF_PRODUCTION':
+                    unidades_producidas_str = request.data.get('unidades_producidas')
+                    total_unidades_estimadas_str = request.data.get('total_unidades_estimadas')
+                    valor_residual_str = request.data.get('valor_residual', '0')
+
+                    if not all([unidades_producidas_str, total_unidades_estimadas_str]):
+                        return Response({'detail': 'Para depreciación por UNIDADES DE PRODUCCIÓN, se requieren unidades_producidas y total_unidades_estimadas.'}, status=status.HTTP_400_BAD_REQUEST)
+                    
+                    try:
+                        unidades_producidas = Decimal(unidades_producidas_str)
+                        total_unidades_estimadas = Decimal(total_unidades_estimadas_str)
+                        valor_residual = Decimal(valor_residual_str)
+
+                        if unidades_producidas <= 0 or total_unidades_estimadas <= 0:
+                            raise ValueError("Las unidades producidas y totales estimadas deben ser números positivos.")
+                        if valor_residual < 0:
+                            raise ValueError("El valor residual no puede ser negativo.")
+                    except (ValueError, InvalidOperation) as e:
+                        return Response({'detail': str(e) or 'Valores de unidades o residual no válidos.'}, status=status.HTTP_400_BAD_REQUEST)
+                    
+                    base_depreciable = activo.valor_actual - valor_residual
+                    if base_depreciable < 0:
+                        base_depreciable = Decimal(0)
+
+                    depreciacion_por_unidad = base_depreciable / total_unidades_estimadas
+                    monto_depreciado = depreciacion_por_unidad * unidades_producidas
+                
+                # --- Validaciones comunes ---
+                if monto_depreciado <= 0:
+                    return Response({'detail': 'El monto a depreciar debe ser un número positivo.'}, status=status.HTTP_400_BAD_REQUEST)
+
+                if monto_depreciado > valor_anterior:
                     return Response({'detail': 'El monto a depreciar no puede ser mayor que el valor actual del activo.'}, status=status.HTTP_400_BAD_REQUEST)
 
-                valor_nuevo = valor_anterior - monto_a_depreciar
+                valor_nuevo = valor_anterior - monto_depreciado
 
                 historial = DepreciacionActivo.objects.create(
                     empresa=activo.empresa,
                     activo=activo,
                     valor_anterior=valor_anterior,
                     valor_nuevo=valor_nuevo,
-                    monto_depreciado=monto_a_depreciar,
+                    monto_depreciado=monto_depreciado,
+                    depreciation_type=depreciation_type, # Guardar el tipo de depreciación
                     notas=notas,
                     realizado_por=request.user
                 )
@@ -1339,6 +1419,44 @@ class DepreciacionActivoViewSet(BaseTenantViewSet):
             logger.error(f"Error en DepreciacionActivoViewSet.ejecutar: {e}", exc_info=True)
             return Response({'detail': f'Error interno del servidor: {e}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+class DisposicionActivoViewSet(BaseTenantViewSet):
+    queryset = DisposicionActivo.objects.all().select_related('activo', 'realizado_por')
+    serializer_class = DisposicionActivoSerializer
+    # Removed required_manage_permission from here
+
+    def check_permissions(self, request):
+        # Custom permission check for DisposicionActivoViewSet
+        if request.method in permissions.SAFE_METHODS: # GET, HEAD, OPTIONS
+            if not check_permission(request, self, 'view_disposicion'):
+                self.permission_denied(
+                    request, message='Permiso "view_disposicion" requerido.'
+                )
+        else: # POST, PUT, PATCH, DELETE
+            if not check_permission(request, self, 'manage_disposicion'):
+                self.permission_denied(
+                    request, message='Permiso "manage_disposicion" requerido.'
+                )
+        super().check_permissions(request) # Call super to handle IsAuthenticated etc.
+
+    def perform_create(self, serializer):
+        with transaction.atomic():
+            disposicion = serializer.save(realizado_por=self.request.user)
+            
+            # Update the ActivoFijo status
+            activo = disposicion.activo
+            try:
+                estado_disposicion = Estado.objects.get(empresa=activo.empresa, nombre='DADO_DE_BAJA')
+            except Estado.DoesNotExist:
+                # If the status doesn't exist, create it.
+                estado_disposicion = Estado.objects.create(empresa=activo.empresa, nombre='DADO_DE_BAJA', detalle='Activo dado de baja por disposición.')
+            
+            # Set the asset's status to DADO_DE_BAJA
+            activo.estado = estado_disposicion
+            # Upon disposal, the asset's book value becomes zero.
+            activo.valor_actual = Decimal('0.00')
+            
+            # Save the updated fields for the asset.
+            activo.save(update_fields=['estado', 'valor_actual'])
 
 class SuscripcionViewSet(BaseTenantViewSet):
     """
@@ -1393,6 +1511,38 @@ class SuscripcionViewSet(BaseTenantViewSet):
 
         serializer = self.get_serializer(suscripcion)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class ReportePresupuestosViewSet(BaseTenantViewSet):
+    queryset = PeriodoPresupuestario.objects.all().prefetch_related('partidas__departamento')
+    serializer_class = PeriodoPresupuestarioSerializer
+    required_manage_permission = 'view_presupuesto_report' # New permission for budget reports
+    http_method_names = ['get', 'head', 'options'] # Read-only
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+
+        # Add filtering capabilities
+        status_filter = self.request.query_params.get('estado')
+        if status_filter:
+            qs = qs.filter(estado=status_filter.upper())
+
+        fecha_inicio_min = self.request.query_params.get('fecha_inicio_min')
+        if fecha_inicio_min:
+            qs = qs.filter(fecha_inicio__gte=fecha_inicio_min)
+
+        fecha_inicio_max = self.request.query_params.get('fecha_inicio_max')
+        if fecha_inicio_max:
+            qs = qs.filter(fecha_inicio__lte=fecha_inicio_max)
+        
+        fecha_fin_min = self.request.query_params.get('fecha_fin_min')
+        if fecha_fin_min:
+            qs = qs.filter(fecha_fin__gte=fecha_fin_min)
+
+        fecha_fin_max = self.request.query_params.get('fecha_fin_max')
+        if fecha_fin_max:
+            qs = qs.filter(fecha_fin__lte=fecha_fin_max)
+
+        return qs.order_by('-fecha_inicio') # Order by most recent periods first
 
 class NotificacionViewSet(BaseTenantViewSet):
     """

@@ -18,25 +18,27 @@ dependencies:
   jwt_decode: ^0.3.1
 
   # --- UI y Personalización ---
-  lucide_flutter: ^0.548.0
+  lucide_flutter: ^0.554.0
   flutter_colorpicker: ^1.0.3
   cached_network_image: ^3.3.0
 
   # --- Paquetes Futuros ---
-  image_picker: ^1.0.4
+  image_picker: ^1.2.1
   speech_to_text: ^7.3.0
 
   cupertino_icons: ^1.0.8
   mobile_scanner: ^4.0.0 # Para escanear códigos QR
   intl: ^0.19.0
+  fl_chart: ^1.1.0
   
-    
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
   flutter_app_name: ^0.1.1
+
+dependency_overrides:
+  vector_math: ^2.2.0
 
 flutter_app_name:
   name: "ActFijo App"
