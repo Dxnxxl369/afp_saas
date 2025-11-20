@@ -52,28 +52,30 @@ class ActivoFijo {
 
   factory ActivoFijo.fromJson(Map<String, dynamic> json) {
     return ActivoFijo(
-      id: json['id'],
-      nombre: json['nombre'],
-      codigoInterno: json['codigo_interno'],
-      fechaAdquisicion: DateTime.parse(json['fecha_adquisicion']),
-      valorActual: (json['valor_actual'] is String ? double.parse(json['valor_actual']) : json['valor_actual']).toDouble(),
-      vidaUtil: (json['vida_util'] is String ? int.parse(json['vida_util']) : json['vida_util']),
+      id: json['id'] ?? '',
+      nombre: json['nombre'] ?? '',
+      codigoInterno: json['codigo_interno'] ?? '',
+      fechaAdquisicion: DateTime.parse(json['fecha_adquisicion'] ?? DateTime.now().toIso8601String()),
+      valorActual: (json['valor_actual'] is String ? double.parse(json['valor_actual']) : (json['valor_actual'] ?? 0.0)).toDouble(),
+      vidaUtil: (json['vida_util'] is String ? int.parse(json['vida_util']) : (json['vida_util'] ?? 0)),
       
       departamentoId: json['departamento'],
       departamentoNombre: json['departamento_detail']?['nombre'],
       
-      categoriaId: json['categoria'],
+      categoriaId: json['categoria'] ?? '',
       categoriaNombre: json['categoria_detail']?['nombre'] ?? 'Sin categoría',
       
-      estado: Estado.fromJson(json['estado_detail']), // Parsear el objeto Estado
+      estado: json['estado_detail'] != null 
+          ? Estado.fromJson(json['estado_detail']) 
+          : Estado(id: '', nombre: 'Desconocido'), // Default Estado
       
-      ubicacionId: json['ubicacion'],
+      ubicacionId: json['ubicacion'] ?? '',
       ubicacionNombre: json['ubicacion_detail']?['nombre'],
       
       proveedorId: json['proveedor'],
       proveedorNombre: json['proveedor_detail']?['nombre'],
       
-      fotoActivoUrl: json['foto_activo'],
+      fotoActivoUrl: json['foto_activo'] ?? '',
     );
   }
 }

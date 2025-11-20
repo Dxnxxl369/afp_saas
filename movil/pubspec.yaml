@@ -16,6 +16,7 @@ dependencies:
   dio: ^5.4.3 # <-- El reemplazo de 'http'. Es más potente.
   shared_preferences: ^2.2.2
   jwt_decode: ^0.3.1
+  flutter_local_notifications: ^17.0.0 # <--- VERSION CORREGIDA
 
   # --- UI y Personalización ---
   lucide_flutter: ^0.554.0
@@ -39,13 +40,13 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
-  flutter_app_name: ^0.1.1
+  
 
 dependency_overrides:
   vector_math: ^2.2.0
+  xml: ^6.1.0 # <--- NUEVO
 
-flutter_app_name:
-  name: "ActFijo App"
+
 
 flutter:
   

@@ -116,6 +116,16 @@ class AppDrawer extends StatelessWidget {
         pageKey: 'mantenimientos',
       ));
     }
+    // --- NUEVO: Reportes ---
+    if (auth.hasPermission('view_custom_reports')) { // Using the permission checked in backend ReporteQueryView
+      menuItems.add(_buildDrawerItem(
+        context: context,
+        icon: LucideIcons.chartBar, // O un icono más apropiado para reportes
+        title: 'Reportes',
+        pageKey: 'reportes',
+      ));
+    }
+    // --- FIN NUEVO ---
 
     // 4. Módulos de Configuración
     List<Widget> settingsItems = [];
@@ -175,6 +185,16 @@ class AppDrawer extends StatelessWidget {
         pageKey: 'categorias_activo',
       ));
     }
+    // --- NUEVO: Roles ---
+    if (auth.hasPermission('view_rol')) {
+      settingsItems.add(_buildDrawerItem(
+        context: context,
+        icon: LucideIcons.userCog, // O un icono más apropiado para roles
+        title: 'Roles',
+        pageKey: 'roles',
+      ));
+    }
+    // --- FIN NUEVO ---
     if (auth.hasPermission('view_suscripcion')) {
       settingsItems.add(_buildDrawerItem(
         context: context,

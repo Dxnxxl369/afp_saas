@@ -11,7 +11,7 @@ class ChartDataPoint {
     final key = json.keys.firstWhere((k) => k.endsWith('__nombre'), orElse: () => 'name');
     return ChartDataPoint(
       name: json[key] ?? 'Desconocido',
-      count: json['count'],
+      count: json['count'] ?? 0, // Handle null count
     );
   }
 }
@@ -36,15 +36,15 @@ class DashboardData {
   });
 
   factory DashboardData.fromJson(Map<String, dynamic> json) {
-    var estadosList = (json['activos_por_estado'] as List).map((i) => ChartDataPoint.fromJson(i)).toList();
-    var categoriasList = (json['activos_por_categoria'] as List).map((i) => ChartDataPoint.fromJson(i)).toList();
+    var estadosList = (json['activos_por_estado'] as List? ?? []).map((i) => ChartDataPoint.fromJson(i)).toList();
+    var categoriasList = (json['activos_por_categoria'] as List? ?? []).map((i) => ChartDataPoint.fromJson(i)).toList();
 
     return DashboardData(
-      totalActivos: json['total_activos'],
-      totalUsuarios: json['total_usuarios'],
+      totalActivos: json['total_activos'] ?? 0,
+      totalUsuarios: json['total_usuarios'] ?? 0,
       valorTotalActivos: double.tryParse(json['valor_total_activos'].toString()) ?? 0.0,
-      solicitudesPendientes: json['solicitudes_pendientes'],
-      mantenimientosEnProceso: json['mantenimientos_en_proceso'],
+      solicitudesPendientes: json['solicitudes_pendientes'] ?? 0,
+      mantenimientosEnProceso: json['mantenimientos_en_proceso'] ?? 0,
       activosPorEstado: estadosList,
       activosPorCategoria: categoriasList,
     );

@@ -12,3 +12,19 @@ node_modules/
 /movil/.dart_tool/
 /movil/android/build/
 /movil/ios/build/
+# --- Flutter Standard ---
+/build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+
+# --- Configuración de Firebase (Opcional pero recomendado) ---
+# Android
+android/app/google-services.json
+
+# iOS
+ios/Runner/GoogleService-Info.plist
+
+# Configuración generada por FlutterFire CLI (si quieres proteger IDs)
+lib/firebase_options.dart

@@ -2,7 +2,14 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
 import 'package:provider/provider.dart';
+import 'dart:async'; // <--- NUEVO
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_messaging/firebase_messaging.dart'; // <--- NUEVO
+import 'package:movil/main.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart'; // <--- NUEVO
+import 'dart:convert'; // For jsonEncode
+import '../providers/notification_provider.dart'; // <--- NUEVO
+import '../models/notification.dart' as app_notification; // <--- NUEVO
 
 import '../widgets/app_drawer.dart'; // El menú lateral
 import '../providers/auth_provider.dart'; // Para los datos del usuario
@@ -26,6 +33,8 @@ import 'categorias_activo/categorias_activo_screen.dart';
 import 'disposicion/disposicion_screen.dart';
 import 'depreciacion/depreciacion_screen.dart';
 import 'revalorizacion/revalorizacion_screen.dart';
+import 'roles/roles_screen.dart'; // <--- NUEVO
+import 'reportes/reportes_screen.dart'; // <--- NUEVO
 
 // Convertimos HomeScreen a StatefulWidget para manejar la página seleccionada
 class HomeScreen extends StatefulWidget {
@@ -36,8 +45,88 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Estado para saber qué página mostrar en el body
-  String _selectedPageKey = 'dashboard'; // 'dashboard' es la página inicial
+  String _selectedPageKey = 'dashboard';
+  Timer? _notificationTimer; // Nuevo
+
+  @override
+  void initState() {
+    super.initState();
+    // Fetch notifications once when the screen is initialized
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<NotificationProvider>(context, listen: false).fetchNotifications();
+      // Set up a periodic timer to fetch notifications
+      _notificationTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+        Provider.of<NotificationProvider>(context, listen: false).fetchUnreadCount(); // Fetch just the count for efficiency
+      });
+
+      // --- NUEVO: FCM Foreground & OpenedApp Message Handling ---
+      _setupFCMListeners();
+    });
+  }
+
+  @override
+  void dispose() {
+    _notificationTimer?.cancel(); // Cancel the timer when the widget is disposed
+    super.dispose();
+  }
+
+  // --- NUEVO: FCM Message Handling Helpers ---
+  void _setupFCMListeners() {
+    // 1. Handle messages received while the app is in the foreground
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      debugPrint('Got a message whilst in the foreground!');
+      debugPrint('Message data: ${message.data}');
+
+      if (message.notification != null) {
+        debugPrint('Message also contained a notification: ${message.notification}');
+        // --- NUEVO: Display local notification for foreground messages ---
+        flutterLocalNotificationsPlugin.show(
+          message.hashCode, // Unique ID for the notification
+          message.notification!.title,
+          message.notification!.body,
+          NotificationDetails(
+            android: AndroidNotificationDetails(
+              'high_importance_channel', // Must match the ID defined in main.dart
+              'High Importance Notifications',
+              channelDescription: 'This channel is used for important notifications.',
+              importance: Importance.max,
+              priority: Priority.high,
+              ticker: 'ticker',
+            ),
+          ),
+          payload: jsonEncode(message.data), // Pass data as payload
+        );
+        // --- FIN NUEVO ---
+      }
+      // Optionally update in-app notification list
+      _handleFCMMessage(message);
+    });
+
+    // 2. Handle messages that cause the application to open from a terminated or background state
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      debugPrint('A new onMessageOpenedApp event was published!');
+      _handleFCMMessage(message);
+    });
+  }
+
+  void _handleFCMMessage(RemoteMessage message) {
+    // Refresh in-app notifications if a new message arrives
+    Provider.of<NotificationProvider>(context, listen: false).fetchNotifications();
+
+    // Check if the message contains data for navigation
+    final String? urlDestino = message.data['url_destino'];
+    if (urlDestino != null) {
+      String? pageKey = _extractPageKeyFromUrl(urlDestino);
+      if (pageKey != null && _pages.containsKey(pageKey)) {
+        // Delay navigation slightly to allow UI to update or modal to close
+        Future.delayed(const Duration(milliseconds: 500), () {
+          _onNavigate(pageKey);
+        });
+      } else {
+        debugPrint('FCM: URL destino no mapeado a una página: $urlDestino');
+      }
+    }
+  }
 
   // Callback que el AppDrawer usará para cambiar de página
   void _onNavigate(String pageKey) {
@@ -68,6 +157,8 @@ class _HomeScreenState extends State<HomeScreen> {
     'disposicion': const DisposicionScreen(),
     'depreciacion': const DepreciacionScreen(),
     'revalorizacion': const RevalorizacionScreen(),
+    'roles': const RolesScreen(),
+    'reportes': const ReportesScreen(), // <--- NUEVO
     // ... (Añadir otras pantallas de módulos aquí) ...
   };
   
@@ -77,6 +168,8 @@ class _HomeScreenState extends State<HomeScreen> {
     // si el usuario cambia (ej. al cerrar sesión)
     final auth = context.watch<AuthProvider>();
     final user = auth.user; // Puede ser null brevemente durante el logout
+    final notificationProvider = context.watch<NotificationProvider>();
+    final unreadCount = notificationProvider.unreadCount;
 
     return Scaffold(
       appBar: AppBar(
@@ -85,13 +178,13 @@ class _HomeScreenState extends State<HomeScreen> {
           // --- Icono de Notificaciones ---
           IconButton(
             icon: Badge(
-               // label: Text('3'), // (Lógica futura de contador)
-               // isLabelVisible: unreadCount > 0,
+               label: Text(unreadCount.toString()), // Lógica futura de contador
+               isLabelVisible: unreadCount > 0,
                child: const Icon(LucideIcons.bell),
             ),
             tooltip: 'Notificaciones',
             onPressed: () {
-              // TODO: Mostrar overlay/pantalla de notificaciones
+              _showNotificationsSheet(context); // Call the new method
             },
           ),
           
@@ -177,8 +270,211 @@ class _HomeScreenState extends State<HomeScreen> {
       case 'disposicion': return 'Disposición de Activos';
       case 'depreciacion': return 'Depreciación de Activos';
       case 'revalorizacion': return 'Revalorización de Activos';
-      // ... (añadir otros) ...
+      case 'roles': return 'Roles';
+      case 'reportes': return 'Reportes'; // <--- NUEVO
       default: return 'ActFijo App';
     }
+  }
+
+  String? _extractPageKeyFromUrl(String url) {
+    if (url.startsWith('/app/')) {
+      String path = url.substring(5); // Remove '/app/'
+      int slashIndex = path.indexOf('/');
+      if (slashIndex != -1) {
+        return path.substring(0, slashIndex);
+      }
+      return path;
+    }
+    return null;
+  }
+
+  // Helper method for building individual notification list tiles
+  Widget _buildNotificationListTile(BuildContext context, app_notification.Notification notification, Function(String) onNavigateCallback) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: InkWell(
+        onTap: () async {
+          // Mark as read if not already read
+          if (!notification.leido) {
+            // Access the NotificationProvider instance
+            final notificationProvider = Provider.of<NotificationProvider>(context, listen: false);
+            await notificationProvider.markNotificationAsRead(notification.id);
+          }
+          // Handle navigation
+          if (notification.urlDestino != null) {
+            String? pageKey = _extractPageKeyFromUrl(notification.urlDestino!);
+            if (pageKey != null && _pages.containsKey(pageKey)) {
+              onNavigateCallback(pageKey); // Call the navigation callback
+            } else {
+              // Handle deep linking or unmapped URLs
+              debugPrint('Unhandled navigation URL: ${notification.urlDestino}');
+            }
+          }
+          Navigator.of(context).pop(); // Close the sheet after action
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Row(
+            children: [
+              Icon(
+                notification.leido ? LucideIcons.bell : LucideIcons.bellDot, // Use bellDot for unread
+                color: notification.leido ? Colors.grey : Theme.of(context).colorScheme.primary,
+                size: 28,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      notification.mensaje,
+                      style: TextStyle(
+                        fontWeight: notification.leido ? FontWeight.normal : FontWeight.bold,
+                        color: notification.leido ? Colors.grey[800] : null,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${notification.tipoDisplay} - ${notification.timestamp.toLocal().toString().substring(0, 16)}',
+                      style: TextStyle(
+                        color: notification.leido ? Colors.grey[500] : null,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (notification.urlDestino != null)
+                const Icon(Icons.arrow_forward_ios, size: 20, color: Colors.grey),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showNotificationsSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (BuildContext bc) {
+        return Consumer<NotificationProvider>(
+          builder: (context, notificationProvider, child) {
+            if (notificationProvider.isLoading && notificationProvider.notifications.isEmpty) {
+              return const SizedBox(
+                height: 200,
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            if (notificationProvider.errorMessage != null && notificationProvider.notifications.isEmpty) {
+              return SizedBox(
+                height: 200,
+                child: Center(
+                  child: Text('Error: ${notificationProvider.errorMessage}'),
+                ),
+              );
+            }
+
+            if (notificationProvider.notifications.isEmpty) {
+              return const SizedBox(
+                height: 200,
+                child: Center(child: Text('No hay notificaciones.')),
+              );
+            }
+
+            final List<app_notification.Notification> unreadNotifications = notificationProvider.notifications
+                .where((n) => !n.leido)
+                .toList();
+            final List<app_notification.Notification> readNotifications = notificationProvider.notifications
+                .where((n) => n.leido)
+                .toList();
+
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.75, // Occupy 75% of screen height
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 16.0, top: 16.0, right: 16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Notificaciones',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        if (unreadNotifications.isNotEmpty)
+                          TextButton(
+                            onPressed: () async {
+                              // Show loading indicator
+                              showDialog(
+                                context: context,
+                                builder: (context) => const Center(child: CircularProgressIndicator()),
+                                barrierDismissible: false,
+                              );
+                              await notificationProvider.markAllNotificationsAsRead();
+                              Navigator.of(context).pop(); // Close loading indicator
+                              // Navigator.of(context).pop(); // Keep modal open after marking all as read for better UX
+                            },
+                            child: const Text('Marcar todas como leídas'),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const Divider(height: 1),
+                  Expanded(
+                    child: ListView( // Use ListView directly here to handle both sections
+                      shrinkWrap: true,
+                      children: [
+                        if (unreadNotifications.isNotEmpty) ...[
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                            child: Text(
+                              'Nuevas',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(), // Important for nested scroll views
+                            itemCount: unreadNotifications.length,
+                            itemBuilder: (context, index) {
+                              return _buildNotificationListTile(context, unreadNotifications[index], _onNavigate);
+                            },
+                          ),
+                        ],
+                        if (readNotifications.isNotEmpty) ...[
+                          if (unreadNotifications.isNotEmpty) const Divider(height: 1), // Separator if both exist
+                          ExpansionTile(
+                            title: Text('Leídas (${readNotifications.length})', style: const TextStyle(fontWeight: FontWeight.bold)),
+                            initiallyExpanded: false, // Start collapsed
+                            children: [
+                              ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: readNotifications.length,
+                                itemBuilder: (context, index) {
+                                  return _buildNotificationListTile(context, readNotifications[index], _onNavigate);
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 }

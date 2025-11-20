@@ -1,0 +1,24 @@
+# --- Python y Django ---
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+db.sqlite3
+
+# --- Archivos Generados ---
+media/
+mediafiles/
+staticfiles/
+
+# --- SEGURIDAD (CRÍTICO) ---
+.env
+.env.production
+.env.local
+
+# Credenciales específicas
+firebase_service_account.json
+
+# --- Regla agresiva para JSONs (Seguridad extra) ---
+*.json
+!package.json

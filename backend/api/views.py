@@ -24,6 +24,7 @@ from django.db.models import Q, Sum, Count
 import re
 from datetime import datetime
 from .report_utils import create_excel_report, create_pdf_report
+from .fcm_utils import send_fcm_notification # <--- NUEVO
 from decimal import Decimal, InvalidOperation
 from django.utils import timezone
 import boto3
@@ -497,16 +498,35 @@ class SolicitudCompraViewSet(BaseTenantViewSet):
             else: # 'rechazar'
                 tipo_notif = 'ADVERTENCIA'
                 mensaje = f"Tu solicitud de compra para '{solicitud.descripcion}' fue RECHAZADA."
+                title_fcm = "Solicitud Rechazada"
 
-            Notificacion.objects.create(
+            notif_obj = Notificacion.objects.create(
                 destinatario=solicitud.solicitante,
                 tipo=tipo_notif,
                 mensaje=mensaje,
                 url_destino='/app/solicitudes-compra' # URL a la que irá el usuario al hacer clic
             )
+
+            # --- [NUEVO] Enviar FCM Push Notification ---
+            empleado_destinatario = Empleado.objects.filter(usuario=solicitud.solicitante).first()
+            if empleado_destinatario and empleado_destinatario.fcm_token:
+                fcm_data = {
+                    "id": str(notif_obj.id),
+                    "url_destino": notif_obj.url_destino,
+                    "tipo": notif_obj.tipo,
+                }
+                success, response_fcm = send_fcm_notification(
+                    fcm_token=empleado_destinatario.fcm_token,
+                    title=title_fcm,
+                    body=mensaje,
+                    data=fcm_data
+                )
+                if not success:
+                    logger.error(f"Error al enviar FCM para solicitud {solicitud.id}: {response_fcm}")
+
         except Exception as e:
-            # Si la creación de la notificación falla, no debe detener el proceso principal.
-            logger.error(f"Error al crear la notificación para la solicitud {solicitud.id}: {e}")
+            # Si la creación de la notificación o FCM falla, no debe detener el proceso principal.
+            logger.error(f"Error al crear la notificación o enviar FCM para la solicitud {solicitud.id}: {e}")
         # --- [FIN] ---
 
         serializer = self.get_serializer(solicitud)
@@ -663,8 +683,8 @@ class PermisosViewSet(viewsets.ModelViewSet):
 #        )
 
 class LogViewSet(viewsets.ModelViewSet):
-    # queryset = Log.objects.all() # Descomenta si tienes el modelo Log
-    # serializer_class = LogSerializer # Descomenta si tienes el serializer
+    queryset = Log.objects.all() # Descomenta si tienes el modelo Log
+    serializer_class = LogSerializer # Descomenta si tienes el serializer
 
     def create(self, request, *args, **kwargs):
         # 1. Validar datos recibidos
@@ -1048,9 +1068,17 @@ class ReporteQueryView(APIView):
             return ActivoFijo.objects.none()
 
     def post(self, request, *args, **kwargs):
-        # --- Comprobación de Suscripción ---
+        # --- Comprobación de Suscripción y Permiso --- # <--- MODIFICADO
         try:
             if not request.user.is_staff:
+                # Comprobación de permiso explícita
+                if not check_permission(request, self, 'view_custom_reports'): # Assuming 'view_custom_reports' covers general report access
+                    return Response(
+                        {'detail': 'Permiso "view_custom_reports" requerido para acceder a reportes personalizados.'},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+                
+                # Comprobación de suscripción (existente)
                 plan = request.user.empleado.empresa.suscripcion.plan
                 if plan == 'basico':
                     return Response(
@@ -1059,7 +1087,7 @@ class ReporteQueryView(APIView):
                     )
         except (Empleado.DoesNotExist, Suscripcion.DoesNotExist):
             return Response(
-                {'detail': 'No se pudo verificar tu plan de suscripción.'},
+                {'detail': 'No se pudo verificar tu plan de suscripción o perfil de empleado.'}, # <--- Mensaje mejorado
                 status=status.HTTP_403_FORBIDDEN
             )
         # --- Fin de la Comprobación ---
@@ -1094,9 +1122,17 @@ class ReporteQueryExportView(ReporteQueryView): # Hereda get_base_queryset
     """
     
     def post(self, request, *args, **kwargs):
-        # --- Comprobación de Suscripción ---
+        # --- Comprobación de Suscripción y Permiso --- # <--- MODIFICADO
         try:
             if not request.user.is_staff:
+                # Comprobación de permiso explícita
+                if not check_permission(request, self, 'view_custom_reports'): # Assuming 'view_custom_reports' covers general report access
+                    return Response(
+                        {'detail': 'Permiso "view_custom_reports" requerido para exportar reportes personalizados.'},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+
+                # Comprobación de suscripción (existente)
                 plan = request.user.empleado.empresa.suscripcion.plan
                 if plan == 'basico':
                     return Response(
@@ -1105,7 +1141,7 @@ class ReporteQueryExportView(ReporteQueryView): # Hereda get_base_queryset
                     )
         except (Empleado.DoesNotExist, Suscripcion.DoesNotExist):
             return Response(
-                {'detail': 'No se pudo verificar tu plan de suscripción.'},
+                {'detail': 'No se pudo verificar tu plan de suscripción o perfil de empleado.'}, # <--- Mensaje mejorado
                 status=status.HTTP_403_FORBIDDEN
             )
         # --- Fin de la Comprobación ---
@@ -1207,20 +1243,37 @@ class MantenimientoViewSet(BaseTenantViewSet):
     # --- [NUEVA FUNCIÓN HELPER] ---
     def _crear_notificacion_asignacion(self, mantenimiento_instance):
         empleado_asignado = mantenimiento_instance.empleado_asignado
-        # --- [CAMBIO] Verificar que el empleado tenga usuario ---
         if empleado_asignado and hasattr(empleado_asignado, 'usuario'):
             destinatario_user = empleado_asignado.usuario
             try:
                 mensaje = (f"Se te ha asignado una tarea de mantenimiento ({mantenimiento_instance.get_tipo_display()}) "
                            f"para el activo '{mantenimiento_instance.activo.nombre}'.")
+                title_fcm = "Nueva Asignación de Mantenimiento" # <--- NUEVO
 
-                # --- [CAMBIO] Crear notificación para el USUARIO destinatario ---
-                Notificacion.objects.create(
-                    destinatario=destinatario_user, # <-- ASIGNAR A USER
+                notif_obj = Notificacion.objects.create( # <--- Guardar la instancia
+                    destinatario=destinatario_user,
                     mensaje=mensaje,
                     tipo='INFO',
+                    url_destino=f'/app/mantenimientos/{mantenimiento_instance.id}' # Enlace directo al mantenimiento
                 )
                 print(f"DEBUG: Notificación de asignación creada para usuario {destinatario_user.id}")
+
+                # --- [NUEVO] Enviar FCM Push Notification ---
+                if empleado_asignado.fcm_token:
+                    fcm_data = {
+                        "id": str(notif_obj.id),
+                        "url_destino": notif_obj.url_destino,
+                        "tipo": notif_obj.tipo,
+                    }
+                    success, response_fcm = send_fcm_notification(
+                        fcm_token=empleado_asignado.fcm_token,
+                        title=title_fcm,
+                        body=mensaje,
+                        data=fcm_data
+                    )
+                    if not success:
+                        logger.error(f"Error al enviar FCM para mantenimiento {mantenimiento_instance.id}: {response_fcm}")
+
             except Exception as e:
                 print(f"ERROR: No se pudo crear notificación para mant. {mantenimiento_instance.id}. Error: {e}")
         elif empleado_asignado:
@@ -1661,3 +1714,28 @@ class NotificacionViewSet(BaseTenantViewSet):
             return Response({'status': f'{count} notificaciines marcadas como leídas'}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'], url_path='unread-count')
+    def unread_count(self, request):
+        """Devuelve el número de notificaciones no leídas para el usuario."""
+        count = self.get_queryset().filter(leido=False).count()
+        return Response({'unread_count': count}, status=status.HTTP_200_OK)
+
+class FCMTokenView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = FCMTokenSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        fcm_token = serializer.validated_data['fcm_token']
+
+        try:
+            empleado = request.user.empleado
+            empleado.fcm_token = fcm_token
+            empleado.save(update_fields=['fcm_token'])
+            return Response({'detail': 'FCM token guardado exitosamente.'}, status=status.HTTP_200_OK)
+        except Empleado.DoesNotExist:
+            return Response({'detail': 'Usuario no asociado a un perfil de empleado.'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Error saving FCM token for user {request.user.id}: {e}", exc_info=True)
+            return Response({'detail': 'Error interno al guardar el token FCM.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

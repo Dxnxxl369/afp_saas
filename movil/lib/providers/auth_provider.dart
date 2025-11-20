@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // --- [IMPORTACIÓN CORRECTA] ---
 import 'package:jwt_decode/jwt_decode.dart';
+import 'package:firebase_messaging/firebase_messaging.dart'; // <--- NUEVO
 // Importa la función 'jwtDecode'
 // --- [FIN IMPORTACIÓN] ---
 import '../services/auth_service.dart';
@@ -52,6 +53,7 @@ class AppUser {
 class AuthProvider with ChangeNotifier {
   final AuthService _authService = AuthService();
   final ApiService _apiService = ApiService();
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance; // <--- NUEVO
   
   bool _isAuthenticated = false;
   AppUser? _user;
@@ -100,6 +102,9 @@ class AuthProvider with ChangeNotifier {
       
       debugPrint("AuthProvider: Token válido encontrado, logueando...");
       await _handleTokenData(token);
+      // After handling token data, set up FCM
+      await _setupFCM(); // <--- NUEVO
+      
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -144,6 +149,8 @@ class AuthProvider with ChangeNotifier {
       
       await _handleTokenData(token);
       
+      await _setupFCM(); // <--- NUEVO
+      
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -159,6 +166,16 @@ class AuthProvider with ChangeNotifier {
     _userRoles = [];
     _userIsAdmin = false;
     _userPermissions = <String>{};
+    
+    // Optionally delete FCM token from backend on logout
+    if (_user != null && _user!.empleadoId != null) {
+      try {
+        await _apiService.updateFCMToken(""); // Send empty token to clear it
+        debugPrint("AuthProvider: FCM token cleared from backend on logout.");
+      } catch (e) {
+        debugPrint("AuthProvider: Error clearing FCM token on logout: $e");
+      }
+    }
     
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
@@ -194,5 +211,54 @@ class AuthProvider with ChangeNotifier {
   
   bool hasRole(String roleName) {
     return _userRoles.contains(roleName);
+  }
+
+  // --- NUEVO: FCM Setup ---
+  Future<void> _setupFCM() async {
+    if (!_isAuthenticated) return; // Only set up FCM if authenticated
+
+    // 1. Request notification permissions
+    NotificationSettings settings = await _firebaseMessaging.requestPermission(
+      alert: true,
+      announcement: false,
+      badge: true,
+      carPlay: false,
+      criticalAlert: false,
+      provisional: false,
+      sound: true,
+    );
+
+    debugPrint('User granted permission: ${settings.authorizationStatus}');
+
+    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+      // 2. Get FCM token
+      String? fcmToken = await _firebaseMessaging.getToken();
+      debugPrint('FCM Token: $fcmToken');
+
+      if (fcmToken != null && _user != null && _user!.empleadoId != null) {
+        // 3. Send token to backend
+        try {
+          await _apiService.updateFCMToken(fcmToken);
+          debugPrint("AuthProvider: FCM token sent to backend.");
+        } catch (e) {
+          debugPrint("AuthProvider: Error sending FCM token to backend: $e");
+        }
+      }
+
+      // 4. Listen for token refreshes
+      _firebaseMessaging.onTokenRefresh.listen((newToken) async {
+        debugPrint('FCM Token Refreshed: $newToken');
+        if (_user != null && _user!.empleadoId != null) {
+          try {
+            await _apiService.updateFCMToken(newToken);
+            debugPrint("AuthProvider: Refreshed FCM token sent to backend.");
+          } catch (e) {
+            debugPrint("AuthProvider: Error sending refreshed FCM token to backend: $e");
+          }
+        }
+      });
+    } else {
+      debugPrint("AuthProvider: User did not grant notification permissions.");
+    }
   }
 }

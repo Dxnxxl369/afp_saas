@@ -1,6 +1,10 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:provider/provider.dart'; // Corrected import
+import 'package:firebase_core/firebase_core.dart'; // <--- NUEVO
+import 'package:firebase_messaging/firebase_messaging.dart'; // <--- NUEVO
+import 'package:flutter_local_notifications/flutter_local_notifications.dart'; // <--- NUEVO
+import 'firebase_options.dart'; // <--- NUEVO
 
 // Importar Providers
 import 'providers/auth_provider.dart';
@@ -22,6 +26,10 @@ import 'providers/categoria_activo_provider.dart';
 import 'providers/revalorizacion_provider.dart';
 import 'providers/depreciacion_provider.dart';
 import 'providers/disposicion_provider.dart';
+import 'providers/notification_provider.dart';
+import 'providers/roles_provider.dart'; // <--- NUEVO
+import 'providers/reportes_provider.dart'; // <--- NUEVO
+import 'services/api_service.dart'; // <--- NUEVO
 
 // Importar Pantallas
 import 'screens/home_screen.dart'; // <-- Archivo que te faltaba
@@ -30,7 +38,46 @@ import 'screens/splash_screen.dart'; // <-- Pantalla de carga
 
 import 'app_theme.dart'; // Tu archivo de diseño
 
-void main() {
+// Top-level function to handle background messages
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  debugPrint('Handling a background message: ${message.messageId}');
+  // You can perform heavy data processing here if needed
+}
+
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin(); // <--- NUEVO
+
+Future<void> main() async { // <--- MODIFICADO A async
+  WidgetsFlutterBinding.ensureInitialized(); // <--- NUEVO
+  await Firebase.initializeApp( // <--- NUEVO
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // --- NUEVO: FlutterLocalNotificationsPlugin initialization ---
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher'); // Use your app icon
+  const InitializationSettings initializationSettings =
+      InitializationSettings(android: initializationSettingsAndroid);
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+  // --- NUEVO: Create Android Notification Channel (for heads-up notifications) ---
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(const AndroidNotificationChannel(
+        'high_importance_channel', // id
+        'High Importance Notifications', // title
+        description: 'This channel is used for important notifications.', // description
+        importance: Importance.max, // for heads-up notifications
+      ));
+  // --- FIN NUEVO ---
+
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler); // <--- NUEVO
+
   runApp(const MyApp());
 }
 
@@ -76,6 +123,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => RevalorizacionProvider()),
         ChangeNotifierProvider(create: (_) => DepreciacionProvider()),
         ChangeNotifierProvider(create: (_) => DisposicionProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider(ApiService())),
+        ChangeNotifierProvider(create: (_) => RolesProvider(ApiService())),
+        ChangeNotifierProvider(create: (_) => ReportesProvider(ApiService())), // <--- NUEVO
         // (Añadir más providers de módulos aquí)
       ],
       child: Consumer<ThemeProvider>(

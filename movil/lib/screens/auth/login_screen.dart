@@ -17,6 +17,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
+  bool _isPasswordVisible = false; // <-- NUEVO
+
 
   Future<void> _submitLogin() async {
     if (!_formKey.currentState!.validate()) return;
@@ -84,11 +86,21 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 TextFormField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Contraseña',
-                    prefixIcon: Icon(LucideIcons.lock),
+                    prefixIcon: const Icon(LucideIcons.lock),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isPasswordVisible ? LucideIcons.eye : LucideIcons.eyeOff,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isPasswordVisible = !_isPasswordVisible;
+                        });
+                      },
+                    ),
                   ),
-                  obscureText: true,
+                  obscureText: !_isPasswordVisible,
                   validator: (value) => (value == null || value.isEmpty) ? 'Ingrese su contraseña' : null,
                   textInputAction: TextInputAction.done,
                   onFieldSubmitted: (_) => _submitLogin(), // Permite login con Enter

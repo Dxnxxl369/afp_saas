@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
+    'firebase_admin', # Add this for Firebase Admin SDK
     # --- NUESTRA APP ---
     'api',
 ]
@@ -194,3 +195,15 @@ AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
 AWS_S3_REGION_NAME = 'us-east-1' # O la región que elegiste (ej. us-east-1)
 AWS_STORAGE_BUCKET_NAME = 'logs-afp-saas-prod' # <--- ¡PON AQUÍ EL NOMBRE DE TU BUCKET!
+
+# --- Firebase Admin SDK Configuration ---
+# IMPORTANT: Place your Firebase service account key file (e.g., your-project-name-firebase-adminsdk-xxxxx-xxxxxx.json)
+# in the backend/ directory (next to manage.py) and update this path.
+FIREBASE_ADMIN_CREDENTIALS_PATH = os.path.join(BASE_DIR, 'firebase_service_account.json')
+
+# FCM_API_KEY and FCM_SENDER_ID (from environment variables, if needed for client-side config or other tools)
+# These are typically used by client-side SDKs or other specific FCM integrations,
+# not directly by the Firebase Admin SDK for sending messages.
+# For sending messages, the Admin SDK primarily uses the service account key.
+FCM_API_KEY = os.getenv('FCM_API_KEY')
+FCM_SENDER_ID = os.getenv('FCM_SENDER_ID')

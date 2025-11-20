@@ -94,11 +94,41 @@ class DepartamentoSerializer(serializers.ModelSerializer):
         model = Departamento
         fields = '__all__'
 
+class PermisosSerializer(serializers.ModelSerializer): # <--- MOVED HERE
+    class Meta:
+        model = Permisos
+        fields = '__all__'
+
 class RolesSerializer(serializers.ModelSerializer):
     empresa = serializers.HiddenField(default=CurrentUserEmpresaDefault())
+    permisos = PermisosSerializer(many=True, read_only=True) # For reading full permission objects
+    permisos_to_assign = serializers.ListField(
+        child=serializers.UUIDField(),
+        write_only=True,
+        required=False,
+        help_text="Lista de IDs de permisos para asignar/actualizar al rol."
+    )
+
     class Meta:
         model = Roles
-        fields = '__all__'
+        fields = ['id', 'empresa', 'nombre', 'permisos', 'permisos_to_assign']
+        read_only_fields = ['id', 'empresa']
+
+    def create(self, validated_data):
+        permisos_ids = validated_data.pop('permisos_to_assign', [])
+        role = super().create(validated_data)
+        if permisos_ids:
+            perms = Permisos.objects.filter(id__in=permisos_ids)
+            role.permisos.set(perms)
+        return role
+
+    def update(self, instance, validated_data):
+        permisos_ids = validated_data.pop('permisos_to_assign', None)
+        role = super().update(instance, validated_data)
+        if permisos_ids is not None:
+            perms = Permisos.objects.filter(id__in=permisos_ids)
+            role.permisos.set(perms)
+        return role
         
 class EmpleadoSerializer(serializers.ModelSerializer): # <-- [EDITADO]
     usuario = UsuarioSerializer(read_only=True)
@@ -351,10 +381,7 @@ class OrdenCompraSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
-class PermisosSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Permisos
-        fields = '__all__'
+
 
 class RegisterEmpresaSerializer(serializers.Serializer):
     # (Campos existentes)
@@ -663,7 +690,10 @@ class NotificacionSerializer(serializers.ModelSerializer):
             'id', 'timestamp', 'mensaje', 'tipo', 'leido', 
             'url_destino', 'tipo_display'
         ]
-        read_only_fields = ('empresa',)
+
+# --- Serializer para recibir FCM token ---
+class FCMTokenSerializer(serializers.Serializer):
+    fcm_token = serializers.CharField(max_length=255)
 
 # --- Serializer de Log (Tu versión está bien) ---
 class LogSerializer(serializers.ModelSerializer):

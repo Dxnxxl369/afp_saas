@@ -101,6 +101,9 @@ class Empleado(models.Model): # <-- [EDITADO]
     )
     # Guardamos si el efecto glow está activado
     theme_glow_enabled = models.BooleanField(default=False)
+    
+    # --- [NUEVO] Campo para almacenar el token de FCM para notificaciones push ---
+    fcm_token = models.CharField(max_length=255, blank=True, null=True, verbose_name="FCM Token")
     # --- [FIN DE NUEVOS CAMPOS] ---
 
     def __str__(self):

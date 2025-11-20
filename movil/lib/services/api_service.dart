@@ -25,6 +25,10 @@ import '../models/categoria_activo.dart';
 import '../models/disposicion.dart';
 import '../models/depreciacion.dart';
 import '../models/revalorizacion.dart';
+import '../models/notification.dart';
+import '../models/rol.dart'; // <--- NUEVO
+import '../models/permiso.dart'; // <--- NUEVO
+import '../models/reporte_activo.dart'; // <--- NUEVO
 
 class ApiService {
   final Dio _dio;
@@ -79,6 +83,101 @@ class ApiService {
       return response.data;
     } on DioException catch (e) {
       throw Exception('Error al guardar preferencias de tema: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  // --- FCM Token Management ---
+  Future<void> updateFCMToken(String fcmToken) async {
+    try {
+      await _dio.post('/fcm-token/', data: {'fcm_token': fcmToken});
+      await logAction('UPDATE: FCMToken', {'fcm_token': fcmToken});
+    } on DioException catch (e) {
+      debugPrint("API Service Error updating FCM token: ${e.response?.data ?? e.message}");
+      throw Exception('Error al actualizar token FCM: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  // --- Notifications ---
+  Future<List<Notification>> getNotifications() => _fetchList('/notificaciones/', Notification.fromJson);
+
+  Future<int> getUnreadNotificationsCount() async {
+    try {
+      final response = await _dio.get('/notificaciones/unread-count/');
+      return response.data['unread_count'] as int;
+    } on DioException catch (e) {
+      throw Exception('Error al obtener el contador de notificaciones no leídas: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<void> markNotificationAsRead(String notificationId) async {
+    try {
+      await _dio.post('/notificaciones/$notificationId/marcar-leido/');
+      await logAction('UPDATE: NotificationRead', {'id': notificationId});
+    } on DioException catch (e) {
+      throw Exception('Error al marcar notificación como leída: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<void> markAllNotificationsAsRead() async {
+    try {
+      await _dio.post('/notificaciones/marcar-todo-leido/');
+      await logAction('UPDATE: AllNotificationsRead');
+    } on DioException catch (e) {
+      throw Exception('Error al marcar todas las notificaciones como leídas: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  // --- Roles ---
+  Future<List<Rol>> getRoles() => _fetchList('/roles/', Rol.fromJson);
+
+  Future<Rol> getRole(String id) async {
+    try {
+      final response = await _dio.get('/roles/$id/');
+      return Rol.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception('Error al cargar rol: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<Rol> createRole(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post('/roles/', data: data);
+      await logAction('CREATE: Rol', {'id': response.data['id'], 'nombre': data['nombre']});
+      return Rol.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception('Error al crear rol: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<Rol> updateRole(String id, Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.patch('/roles/$id/', data: data);
+      await logAction('UPDATE: Rol', {'id': id, 'nombre': data['nombre']});
+      return Rol.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception('Error al actualizar rol: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  Future<void> deleteRole(String id) async {
+    try {
+      await _dio.delete('/roles/$id/');
+      await logAction('DELETE: Rol', {'id': id});
+    } on DioException catch (e) {
+      throw Exception('Error al eliminar rol: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  // --- Permisos ---
+  Future<List<Permiso>> getAllPermissions() => _fetchList('/permisos/', Permiso.fromJson);
+
+  Future<Rol> updateRolePermissions(String roleId, List<String> newPermissionIds) async {
+    try {
+      final response = await _dio.patch('/roles/$roleId/', data: {'permisos': newPermissionIds});
+      await logAction('UPDATE: RolePermissions', {'id': roleId, 'permisos': newPermissionIds});
+      return Rol.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception('Error al actualizar permisos del rol: ${e.response?.data?['detail'] ?? e.message}');
     }
   }
 
@@ -584,6 +683,19 @@ class ApiService {
       return Revalorizacion.fromJson(response.data);
     } on DioException catch (e) {
       throw Exception('Error al ejecutar revalorización: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
+  // --- Reports ---
+  Future<List<ReporteActivo>> getDynamicReport(List<String> filters) async {
+    try {
+      final response = await _dio.post('/reportes/query/', data: {'filters': filters});
+      // The backend returns a list of maps, which needs to be converted to ReporteActivo objects.
+      final List<dynamic> dataList = response.data;
+      return dataList.map((json) => ReporteActivo.fromJson(json)).toList();
+    } on DioException catch (e) {
+      debugPrint("API Service Error fetching dynamic report: ${e.response?.data ?? e.message}");
+      throw Exception('Error al obtener reporte dinámico: ${e.response?.data?['detail'] ?? e.message}');
     }
   }
 }
