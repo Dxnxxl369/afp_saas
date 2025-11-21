@@ -311,7 +311,7 @@ export default function ActivosFijosList() {
                             >
                                 <div className="p-0 bg-accent bg-opacity-10 rounded-lg mr-4 mb-3 md:mb-0 flex-shrink-0">
                                     {activo.foto_activo ? (
-                                        <img src={activo.foto_activo} alt={activo.nombre} className="w-16 h-16 rounded-lg object-cover" />
+                                        <img src={`${apiClient.defaults.baseURL.replace('/api', '')}${activo.foto_activo}`} alt={activo.nombre} className="w-16 h-16 rounded-lg object-cover" />
                                     ) : (
                                         <div className="w-16 h-16 flex items-center justify-center rounded-lg bg-tertiary">
                                             <Box className="text-accent" size={32} />

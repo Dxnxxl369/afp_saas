@@ -1,0 +1,54 @@
+
+---
+### **Archivos y componentes clave involucrados al guardar un permiso en un rol:**
+
+Cuando se guarda un permiso en un rol a través del administrador de Django, los siguientes archivos y componentes son cruciales:
+
+1.  **`backend/api/models.py`**:
+    *   Aquí se definen los modelos `Roles` y `Permisos`.
+    *   La relación *muchos-a-muchos* entre `Roles` y `Permisos` es fundamental. Es donde Django sabe cómo vincular un rol con múltiples permisos.
+    *   Asegúrate de que la definición de los campos y las relaciones sea correcta (por ejemplo, `roles = models.ManyToManyField(Permisos, related_name='roles_con_permiso')`).
+
+2.  **`backend/api/admin.py` (si existe y registra los modelos `Roles` y `Permisos`):**
+    *   Este archivo personaliza cómo se muestran y editan los modelos en el panel de administración de Django.
+    *   Si hay un `ModelAdmin` personalizado para el modelo `Roles`, este podría influir en cómo se manejan los permisos (`fields`, `inlines`, `form` personalizados, etc.). Un error aquí podría impedir que los permisos se guarden correctamente.
+
+3.  **`backend/ActFijoSaaS/settings.py`**:
+    *   **`INSTALLED_APPS`**: Asegúrate de que tanto `api` como cualquier aplicación que defina modelos de autenticación o permisos (`django.contrib.auth`, `django.contrib.contenttypes`) estén listadas.
+    *   **`DATABASES`**: La configuración de la base de datos es crítica. Si tu entorno desplegado usa una configuración de base de datos diferente a la local, o si hay un problema con las credenciales, el host, el puerto o el nombre de la base de datos, los cambios no se guardarán.
+    *   **`DATABASE_ROUTERS`**: Si estás utilizando enrutadores de base de datos (como `api.db_router.AnalyticsRouter`), verifica que estén configurados correctamente y que los modelos `Roles` y `Permisos` estén mapeados a la base de datos correcta donde esperas que se guarden. Un enrutador mal configurado podría intentar guardar en una base de datos de solo lectura o en una incorrecta.
+
+4.  **`backend/ActFijoSaaS/urls.py`**:
+    *   Asegúrate de que la URL del administrador (`path('admin/', admin.site.urls)`) esté correctamente incluida y accesible en tu entorno desplegado.
+
+5.  **Base de Datos (PostgreSQL):**
+    *   Las tablas de tu base de datos son el destino final. Verifica que la tabla intermedia (generada por la relación `ManyToManyField`, a menudo llamada `api_rol_permisos` o similar si no la especificaste explícitamente) exista y sea accesible para el usuario de la base de datos que Django utiliza en producción.
+    *   Revisa los logs de la base de datos en tu entorno desplegado para ver si hay errores de inserción, actualización o permisos denegados.
+
+### **Posibles razones por las que no se guarda en producción (Troubleshooting):**
+
+1.  **Configuración de `DATABASES` incorrecta en `settings.py` de producción:**
+    *   Compara la sección `DATABASES` de tu `settings.py` local con la de tu entorno desplegado. Un error en el nombre de la base de datos, usuario, contraseña, host o puerto hará que Django no pueda escribir.
+    *   **Acción:** Revisa los `DATABASES` y asegúrate de que el usuario de la base de datos tenga permisos de escritura en la base de datos.
+
+2.  **`DATABASE_ROUTERS` redireccionando a la base de datos incorrecta o de solo lectura:**
+    *   Si `api.db_router.AnalyticsRouter` u otro enrutador está activo, podría estar enviando las operaciones de guardado del modelo `Roles` o `Permisos` a una base de datos diferente a la principal, o a una que es de solo lectura.
+    *   **Acción:** Revisa la lógica de tu enrutador de base de datos para asegurarte de que los modelos de autenticación/permisos (`auth`, `api` models) se dirijan a la base de datos `default` o a la base de datos principal de escritura.
+
+3.  **No se han ejecutado las migraciones en producción:**
+    *   Si has hecho cambios en `models.py` localmente (como añadir o modificar relaciones) y no has ejecutado `python manage.py makemigrations` y `python manage.py migrate` en tu entorno desplegado, las tablas de la base de datos podrían no coincidir con la definición de tus modelos.
+    *   **Acción:** Ejecuta `python manage.py makemigrations` (localmente para generar) y `python manage.py migrate` (en producción para aplicar).
+
+4.  **Permisos del sistema de archivos o de la base de datos:**
+    *   Asegúrate de que el usuario bajo el cual se ejecuta tu aplicación Django en el servidor tenga permisos para conectarse a la base de datos y realizar operaciones de escritura.
+    *   **Acción:** Consulta con el administrador de tu servidor o de la base de datos.
+
+5.  **Caché o configuración de servidor web/proxy:**
+    *   Aunque es menos probable para un problema de persistencia en la base de datos, si tienes un caché agresivo a nivel de servidor web (Nginx, Gunicorn) o un proxy, podría estar sirviendo respuestas antiguas. Sin embargo, esto generalmente afectaría la *visualización* de los cambios, no su *guardado*.
+    *   **Acción:** Deshabilita el caché temporalmente en tu servidor web si sospechas que es la causa.
+
+6.  **Logs del servidor Django y la base de datos:**
+    *   Los logs son tu mejor amigo. Revisa los logs de tu aplicación Django en el entorno desplegado para ver si hay errores al procesar la solicitud POST de guardar el rol.
+    *   También revisa los logs de PostgreSQL para ver si hubo un intento de escritura y si falló por alguna razón (ej: permisos, restricciones de la tabla).
+    *   **Acción:** Accede a los logs y busca mensajes de error relevantes.
+---
