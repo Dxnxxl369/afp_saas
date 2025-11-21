@@ -101,34 +101,38 @@ class PermisosSerializer(serializers.ModelSerializer): # <--- MOVED HERE
 
 class RolesSerializer(serializers.ModelSerializer):
     empresa = serializers.HiddenField(default=CurrentUserEmpresaDefault())
-    permisos = PermisosSerializer(many=True, read_only=True) # For reading full permission objects
-    permisos_to_assign = serializers.ListField(
-        child=serializers.UUIDField(),
-        write_only=True,
-        required=False,
-        help_text="Lista de IDs de permisos para asignar/actualizar al rol."
+    permisos = serializers.PrimaryKeyRelatedField(
+        many=True, 
+        queryset=Permisos.objects.all(),
+        required=False
     )
 
     class Meta:
         model = Roles
-        fields = ['id', 'empresa', 'nombre', 'permisos', 'permisos_to_assign']
+        fields = ['id', 'empresa', 'nombre', 'permisos']
         read_only_fields = ['id', 'empresa']
 
+    def to_representation(self, instance):
+        """On read, represent `permisos` as full objects."""
+        representation = super().to_representation(instance)
+        representation['permisos'] = PermisosSerializer(instance.permisos.all(), many=True).data
+        return representation
+
     def create(self, validated_data):
-        permisos_ids = validated_data.pop('permisos_to_assign', [])
-        role = super().create(validated_data)
-        if permisos_ids:
-            perms = Permisos.objects.filter(id__in=permisos_ids)
-            role.permisos.set(perms)
+        permisos_data = validated_data.pop('permisos', [])
+        role = Roles.objects.create(**validated_data)
+        if permisos_data:
+            role.permisos.set(permisos_data)
         return role
 
     def update(self, instance, validated_data):
-        permisos_ids = validated_data.pop('permisos_to_assign', None)
-        role = super().update(instance, validated_data)
-        if permisos_ids is not None:
-            perms = Permisos.objects.filter(id__in=permisos_ids)
-            role.permisos.set(perms)
-        return role
+        permisos_data = validated_data.pop('permisos', None)
+        instance = super().update(instance, validated_data)
+
+        if permisos_data is not None:
+            instance.permisos.set(permisos_data)
+            
+        return instance
         
 class EmpleadoSerializer(serializers.ModelSerializer): # <-- [EDITADO]
     usuario = UsuarioSerializer(read_only=True)
@@ -551,6 +555,8 @@ class MantenimientoSerializer(serializers.ModelSerializer):
     empresa = serializers.HiddenField(default=CurrentUserEmpresaDefault())
     activo = ActivoFijoSerializer(read_only=True)
     empleado_asignado = EmpleadoSimpleSerializer(read_only=True)
+    creado_por = UsuarioSerializer(read_only=True) # <-- AÑADIDO
+    creado_por_nombre = serializers.CharField(source='creado_por.get_full_name', read_only=True) # <-- AÑADIDO
     
     # Campos de fotos separados por tipo
     fotos_problema = serializers.SerializerMethodField()
@@ -580,8 +586,8 @@ class MantenimientoSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'tipo', 'estado', 'fecha_inicio', 'fecha_fin',
             'descripcion_problema', 'notas_solucion', 'costo',
-            'activo', 'empleado_asignado', 
-            'fotos_problema', 'fotos_solucion',  # <-- Campos de lectura nuevos
+            'activo', 'empleado_asignado', 'creado_por', 'creado_por_nombre', # <-- AÑADIDO
+            'fotos_problema', 'fotos_solucion',
             'activo_id', 'empleado_asignado_id',
             'fotos_nuevas', 'fotos_a_eliminar',
             'empresa',
@@ -713,7 +719,7 @@ class LogSerializer(serializers.ModelSerializer):
             'payload',        # Datos JSON enviados por frontend (Opcional)
         ]
         # Campos que el frontend NO debe enviar, los pone el backend
-        read_only_fields = ('id', 'timestamp', 'usuario', 'ip_address', 'tenant_id')
+        read_only_fields = ('id', 'timestamp', 'usuario', 'tenant_id')
         # Hacemos payload opcional al recibir datos
         extra_kwargs = {
             'accion': {'required': True},

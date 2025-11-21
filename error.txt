@@ -1,23 +1,62 @@
-PS C:\Activos Fijos\sprintespecial-con ia\movil> flutter build apk --debug
-Support for Android x86 targets will be removed in the next stable release after 3.27. See
-https://github.com/flutter/flutter/issues/157543 for details.
+(venv) PS C:\Activos Fijos\sprintespecial-con ia\backend> python manage.py runserver 0.0.0.0:8000
+Watching for file changes with StatReloader
+Performing system checks...
 
-FAILURE: Build failed with an exception.
+System check identified no issues (0 silenced).
+November 21, 2025 - 06:08:09
+Django version 5.2.8, using settings 'ActFijoSaaS.settings'
+Starting development server at http://0.0.0.0:8000/
+Quit the server with CTRL-BREAK.
 
-* What went wrong:
-A problem occurred configuring project ':flutter_local_notifications'.
-> Could not create an instance of type com.android.build.api.variant.impl.LibraryVariantBuilderImpl.
-   > Namespace not specified. Specify a namespace in the module's build file: C:\Users\HP\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_local_notifications-8.2.0\android\build.gradle. See https://d.android.com/r/tools/upgrade-assistant/set-namespace for information about setting the namespace.
-
-     If you've specified the package attribute in the source AndroidManifest.xml, you can use the AGP Upgrade Assistant to migrate to the namespace value in the build file. Refer to https://d.android.com/r/tools/upgrade-assistant/agp-upgrade-assistant for general information about using the AGP Upgrade Assistant.
-
-* Try:
-> Run with --stacktrace option to get the stack trace.
-> Run with --info or --debug option to get more log output.
-> Run with --scan to get full insights.
-> Get more help at https://help.gradle.org.
-
-BUILD FAILED in 1m 31s
-Running Gradle task 'assembleDebug'...                             93,7s
-Gradle task assembleDebug failed with exit code 1
-PS C:\Activos Fijos\sprintespecial-con ia\movil> 
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+[21/Nov/2025 06:08:13] "OPTIONS /api/token/ HTTP/1.1" 200 0
+[21/Nov/2025 06:08:14] "POST /api/token/ HTTP/1.1" 200 1433
+[21/Nov/2025 06:08:14] "GET /api/notificaciones/ HTTP/1.1" 200 883
+[21/Nov/2025 06:08:14] "GET /api/my-permissions/ HTTP/1.1" 200 858
+[21/Nov/2025 06:08:14] "GET /api/dashboard/ HTTP/1.1" 200 440
+[21/Nov/2025 06:08:14] "GET /api/notificaciones/ HTTP/1.1" 200 883
+[21/Nov/2025 06:08:14] "GET /api/my-permissions/ HTTP/1.1" 200 858
+[21/Nov/2025 06:08:14] "GET /api/dashboard/ HTTP/1.1" 200 440
+[21/Nov/2025 06:08:15] "POST /api/token/ HTTP/1.1" 200 1411
+[21/Nov/2025 06:08:15] "OPTIONS /api/my-permissions/ HTTP/1.1" 200 0
+[21/Nov/2025 06:08:15] "OPTIONS /api/my-permissions/ HTTP/1.1" 200 0
+[21/Nov/2025 06:08:15] "OPTIONS /api/dashboard/ HTTP/1.1" 200 0
+[21/Nov/2025 06:08:15] "OPTIONS /api/dashboard/ HTTP/1.1" 200 0
+[21/Nov/2025 06:08:15] "GET /api/notificaciones/ HTTP/1.1" 200 6002
+[21/Nov/2025 06:08:15] "GET /api/my-permissions/ HTTP/1.1" 200 230
+[21/Nov/2025 06:08:15] "GET /api/dashboard/ HTTP/1.1" 200 440
+[21/Nov/2025 06:08:15] "GET /api/notificaciones/ HTTP/1.1" 200 6002
+[21/Nov/2025 06:08:15] "GET /api/dashboard/ HTTP/1.1" 200 440
+[21/Nov/2025 06:08:15] "GET /api/my-permissions/ HTTP/1.1" 200 230
+[21/Nov/2025 06:08:17] "OPTIONS /api/mantenimientos/ HTTP/1.1" 200 0
+[21/Nov/2025 06:08:17] "OPTIONS /api/mantenimientos/ HTTP/1.1" 200 0
+DEBUG: get_queryset called by user: elvis
+DEBUG: Found empleado: Elvis Lopez, for empresa: Innovatech Solutions
+DEBUG: Filtered queryset count: 8
+[21/Nov/2025 06:08:17] "GET /api/my-permissions/ HTTP/1.1" 200 230
+C:\Activos Fijos\sprintespecial-con ia\backend\venv\Lib\site-packages\rest_framework\pagination.py:207: UnorderedObjectListWarning: Pagination may yield inconsistent results with an unordered object_list: <class 'api.models.Mantenimiento'> QuerySet.
+  paginator = self.django_paginator_class(queryset, page_size)
+[21/Nov/2025 06:08:17] "GET /api/my-permissions/ HTTP/1.1" 200 230
+[21/Nov/2025 06:08:17] "GET /api/mantenimientos/ HTTP/1.1" 200 8149
+DEBUG: get_queryset called by user: elvis
+DEBUG: Found empleado: Elvis Lopez, for empresa: Innovatech Solutions
+DEBUG: Filtered queryset count: 8
+[21/Nov/2025 06:08:17] "GET /api/mantenimientos/ HTTP/1.1" 200 8149
+[21/Nov/2025 06:08:23] "OPTIONS /api/mantenimientos/a23f30c6-dfe3-40d6-843e-a18bad4ed50b/actualizar-estado/ HTTP/1.1" 200 0
+DEBUG: get_queryset called by user: elvis
+DEBUG: Found empleado: Elvis Lopez, for empresa: Innovatech Solutions
+DEBUG: Filtered queryset count: 8
+[21/Nov/2025 06:08:23] "PATCH /api/mantenimientos/a23f30c6-dfe3-40d6-843e-a18bad4ed50b/actualizar-estado/ HTTP/1.1" 200 922
+Bad Request: /api/logs/
+[21/Nov/2025 06:08:24] "POST /api/logs/ HTTP/1.1" 400 43
+DEBUG: get_queryset called by user: elvis
+DEBUG: Found empleado: Elvis Lopez, for empresa: Innovatech Solutions
+DEBUG: Filtered queryset count: 8
+[21/Nov/2025 06:08:24] "GET /api/mantenimientos/ HTTP/1.1" 200 8178
+[21/Nov/2025 06:08:30] "GET /api/notificaciones/ HTTP/1.1" 200 883
+[21/Nov/2025 06:08:30] "GET /api/my-permissions/ HTTP/1.1" 200 858
+[21/Nov/2025 06:08:30] "GET /api/dashboard/ HTTP/1.1" 200 440
+[21/Nov/2025 06:08:30] "GET /api/notificaciones/ HTTP/1.1" 200 883
+[21/Nov/2025 06:08:30] "GET /api/my-permissions/ HTTP/1.1" 200 858
+[21/Nov/2025 06:08:30] "GET /api/dashboard/ HTTP/1.1" 200 440

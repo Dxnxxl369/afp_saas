@@ -298,6 +298,7 @@ class Mantenimiento(models.Model):
     empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='mantenimientos')
     activo = models.ForeignKey(ActivoFijo, on_delete=models.CASCADE, related_name='mantenimientos')
     empleado_asignado = models.ForeignKey(Empleado, on_delete=models.SET_NULL, null=True, blank=True, related_name='mantenimientos_asignados')
+    creado_por = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='mantenimientos_creados')
     
     TIPO_CHOICES = [('PREVENTIVO', 'Preventivo'), ('CORRECTIVO', 'Correctivo')]
     ESTADO_CHOICES = [('PENDIENTE', 'Pendiente'), ('EN_PROGRESO', 'En Progreso'), ('COMPLETADO', 'Completado')]

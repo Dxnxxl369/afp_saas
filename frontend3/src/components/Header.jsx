@@ -1,68 +1,74 @@
 // src/components/Header.jsx
-import React, { useState, useEffect, useCallback} from 'react';
-import { Menu, X, LogOut, Bell, Check, Info, AlertTriangle, Trash2 } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Menu, X, LogOut, Bell, Check, Info, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getNotificaciones, markNotificacionLeida, markAllNotificacionesLeidas } from '../api/dataService';
-import { useNotification as useAppNotification } from '../context/NotificacionContext'; // Renombrado para evitar conflicto
+import { useNotification as useAppNotification } from '../context/NotificacionContext';
 import { AnimatePresence, motion } from 'framer-motion';
 
-function NotificationBell() {
+function NotificationBell({ setCurrentPage }) {
     const [isOpen, setIsOpen] = useState(false);
     const [notificaciones, setNotificaciones] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
-    const { showNotification } = useAppNotification(); // Hook de pop-up
+    const { showNotification } = useAppNotification();
+    const { isAuthenticated } = useAuth();
 
-    const fetchNotificaciones = useCallback(async () => { // <-- useCallback para memoizar
+    const fetchNotificaciones = useCallback(async () => {
+        if (!isAuthenticated) return;
         try {
             const data = await getNotificaciones();
             const results = data.results || data || [];
             setNotificaciones(results);
-            // Calcular y actualizar el contador aquí
             setUnreadCount(results.filter(n => !n.leido).length);
-            console.log("Notificaciones Fetched:", results);
-            console.log("Unread Count Calculated:", results.filter(n => !n.leido).length);
         } catch (error) {
             console.error("Error al cargar notificaciones:", error);
-            // Resetear en caso de error podría ser útil
             setNotificaciones([]);
             setUnreadCount(0);
         }
-    }, []);
-    // Cargar notificaciones al montar y luego cada 1 minuto
+    }, [isAuthenticated]);
+
+    // Cargar notificaciones al montar y luego cada 1 minuto (polling)
     useEffect(() => {
-        fetchNotificaciones(); // Carga inicial
-        const interval = setInterval(fetchNotificaciones, 60000); // Recarga periódica
+        fetchNotificaciones();
+        const interval = setInterval(fetchNotificaciones, 60000);
         return () => clearInterval(interval);
     }, [fetchNotificaciones]);
 
-    const handleMarkAsRead = async (id) => {
+
+    const handleMarkAsRead = async (id, e) => {
+        if (e) e.stopPropagation();
+        const notif = notificaciones.find(n => n.id === id);
+        if (notif && notif.leido) return;
+
         try {
             await markNotificacionLeida(id);
-            // Actualizar estado local INMEDIATAMENTE para UI
             setNotificaciones(prev => prev.map(n => n.id === id ? { ...n, leido: true } : n));
-            // Decrementar contador INMEDIATAMENTE
             setUnreadCount(prev => (prev > 0 ? prev - 1 : 0));
-            // Opcional: Recargar en segundo plano para consistencia, pero sin await
-            // fetchNotificaciones();
         } catch (error) {
             showNotification('Error al marcar notificación', 'error');
-            // Si falla, podríamos revertir el estado o recargar
-            fetchNotificaciones(); // Recargar si falla
+            fetchNotificaciones();
         }
+    };
+    
+    const handleNotificationClick = (notif) => {
+        if (notif.url_destino) {
+            const moduleName = notif.url_destino.split('/')[2];
+            if (moduleName) {
+                setCurrentPage(moduleName);
+            }
+        }
+        setIsOpen(false);
+        handleMarkAsRead(notif.id);
     };
 
     const handleMarkAllAsRead = async () => {
         try {
             await markAllNotificacionesLeidas();
-            // Actualizar estado local INMEDIATAMENTE para UI
             setNotificaciones(prev => prev.map(n => ({ ...n, leido: true })));
-            // Resetear contador INMEDIATAMENTE
             setUnreadCount(0);
-            // Opcional: Recargar en segundo plano
-            // fetchNotificaciones();
         } catch (error) {
             showNotification('Error al marcar todas', 'error');
-            fetchNotificaciones(); // Recargar si falla
+            fetchNotificaciones();
         }
     };
     
@@ -72,23 +78,18 @@ function NotificationBell() {
         return <Info className="text-blue-500" size={20} />;
     };
 
-    //const unreadCount = notificaciones.filter(n => !n.leido).length;
-
     return (
         <div className="relative">
-            {/* --- El Botón de la Campanita --- */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className="relative p-2 hover:bg-tertiary rounded-lg transition-colors text-primary"
             >
                 <Bell size={22} />
-                {/* Usar el estado unreadCount */}
                 {unreadCount > 0 && (
                     <span className="absolute top-1 right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-secondary" />
                 )}
             </button>
             
-            {/* --- El Menú Desplegable --- */}
             <AnimatePresence>
                 {isOpen && (
                     <motion.div 
@@ -108,10 +109,14 @@ function NotificationBell() {
                         
                         <div className="max-h-80 overflow-y-auto">
                             {notificaciones.length === 0 ? (
-                                <p className="text-center text-secondary p-6 text-sm">No tienes notificaciones nuevas.</p>
+                                <p className="text-center text-secondary p-6 text-sm">No tienes notificaciones.</p>
                             ) : (
                                 notificaciones.map(notif => (
-                                    <div key={notif.id} className={`p-3 border-b border-theme last:border-b-0 flex gap-3 ${notif.leido ? 'opacity-60' : ''}`}>
+                                    <div 
+                                        key={notif.id} 
+                                        onClick={() => handleNotificationClick(notif)}
+                                        className={`p-3 border-b border-theme last:border-b-0 flex gap-3 transition-colors ${notif.leido ? 'opacity-60' : 'hover:bg-tertiary cursor-pointer'}`}
+                                    >
                                         <div className="flex-shrink-0 mt-1">{getIcon(notif.tipo)}</div>
                                         <div className="flex-1">
                                             <p className="text-sm text-primary mb-1">{notif.mensaje}</p>
@@ -120,7 +125,11 @@ function NotificationBell() {
                                             </p>
                                         </div>
                                         {!notif.leido && (
-                                            <button onClick={() => handleMarkAsRead(notif.id)} title="Marcar como leída" className="p-1 text-secondary hover:text-primary">
+                                            <button 
+                                                onClick={(e) => handleMarkAsRead(notif.id, e)} 
+                                                title="Marcar como leída" 
+                                                className="p-1 rounded-full text-secondary hover:text-primary hover:bg-theme"
+                                            >
                                                 <Check size={16} />
                                             </button>
                                         )}
@@ -145,7 +154,7 @@ const getInitials = (name) => {
     return (parts[0].substring(0, 2)).toUpperCase();
 };
 
-export default function Header({ onMenuClick, sidebarOpen }) {
+export default function Header({ onMenuClick, sidebarOpen, setCurrentPage }) { // <-- ACEPTAR PROP
     const [showUserMenu, setShowUserMenu] = useState(false);
     const { user, logout } = useAuth(); // <-- 2. Obtenemos 'user' y 'logout'
 
@@ -162,7 +171,7 @@ export default function Header({ onMenuClick, sidebarOpen }) {
             <div className="flex-1" />
 
             {/* --- MENÚ DE USUARIO DINÁMICO --- */}
-            <NotificationBell />
+            <NotificationBell setCurrentPage={setCurrentPage} /> {/* <-- PASAR PROP */}
             <div className="relative">
                 <button
                     onClick={() => setShowUserMenu(!showUserMenu)}

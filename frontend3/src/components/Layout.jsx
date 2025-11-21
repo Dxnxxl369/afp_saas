@@ -86,6 +86,7 @@ export default function Layout() {
         <Header 
           onMenuClick={() => setSidebarOpen(!sidebarOpen)}
           sidebarOpen={sidebarOpen}
+          setCurrentPage={setCurrentPage}
         />
         
         {/* Main content (THIS part should scroll independently) */}

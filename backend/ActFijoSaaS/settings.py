@@ -21,7 +21,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
-    'firebase_admin', # Add this for Firebase Admin SDK
+    'firebase_admin',
     # --- NUESTRA APP ---
     'api',
 ]

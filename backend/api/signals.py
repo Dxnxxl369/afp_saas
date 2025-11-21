@@ -16,3 +16,4 @@ def update_periodo_monto_total(sender, instance, **kwargs):
     total_asignado = periodo.partidas.aggregate(Sum('monto_asignado'))['monto_asignado__sum'] or 0
     periodo.monto_total = total_asignado
     periodo.save(update_fields=['monto_total'])
+

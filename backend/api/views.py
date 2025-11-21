@@ -1182,7 +1182,7 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.db import transaction
 
 class MantenimientoViewSet(BaseTenantViewSet):
-    queryset = Mantenimiento.objects.all().select_related('activo', 'empleado_asignado__usuario').prefetch_related('fotos') # Optimizar query
+    queryset = Mantenimiento.objects.all().select_related('activo', 'empleado_asignado__usuario', 'creado_por').prefetch_related('fotos') # Optimizar query
     serializer_class = MantenimientoSerializer
     required_manage_permission = 'manage_mantenimiento'
     parser_classes = (JSONParser, MultiPartParser, FormParser) # Añadir parsers para subida de archivos
@@ -1196,7 +1196,8 @@ class MantenimientoViewSet(BaseTenantViewSet):
         try:
             mantenimiento = self.get_object()
             empleado_actual = request.user.empleado
-
+            estado_anterior = mantenimiento.estado
+            
             # 1. Verificar si el usuario es el empleado asignado o un admin
             if mantenimiento.empleado_asignado != empleado_actual and not request.user.is_staff:
                  return Response({'detail': 'No tienes permiso para actualizar este mantenimiento.'},
@@ -1228,6 +1229,68 @@ class MantenimientoViewSet(BaseTenantViewSet):
                     subido_por=request.user,
                     tipo='SOLUCION'
                 )
+            
+            # --- [NUEVO] Lógica de Notificación al creador ---
+            print("--- DEBUG NOTIFICACIÓN ---")
+            print(f"Mantenimiento ID: {mantenimiento.id}")
+            print(f"Creador de la tarea: {mantenimiento.creado_por}")
+            print(f"Usuario actualizando: {request.user}")
+            print(f"Estado anterior: {estado_anterior}")
+            print(f"Nuevo estado: {nuevo_estado}")
+
+            if not mantenimiento.creado_por:
+                print("DEBUG: Condición falló - La tarea no tiene creador (creado_por es Nulo).")
+            if mantenimiento.creado_por == request.user:
+                print("DEBUG: Condición falló - El usuario está actualizando su propia tarea.")
+            if not nuevo_estado:
+                print("DEBUG: Condición falló - No se proporcionó un nuevo estado.")
+            if nuevo_estado == estado_anterior:
+                print("DEBUG: Condición falló - El estado no ha cambiado.")
+
+            if (mantenimiento.creado_por and 
+                mantenimiento.creado_por != request.user and 
+                nuevo_estado and 
+                nuevo_estado != estado_anterior):
+                
+                print("DEBUG: Todas las condiciones cumplidas. Intentando crear notificación...")
+                try:
+                    mensaje = (f"El estado del mantenimiento para '{mantenimiento.activo.nombre}' "
+                               f"fue actualizado a '{mantenimiento.get_estado_display()}' por "
+                               f"{empleado_actual.usuario.get_full_name() or empleado_actual.usuario.username}.")
+                    title_fcm = "Actualización de Mantenimiento"
+                    
+                    notif_obj = Notificacion.objects.create(
+                        destinatario=mantenimiento.creado_por,
+                        mensaje=mensaje,
+                        tipo='INFO',
+                        url_destino=f'/app/mantenimientos' # URL al módulo general
+                    )
+                    print(f"DEBUG: Notificación de BD creada para {mantenimiento.creado_por}.")
+
+                    # Enviar también una notificación Push a través de FCM
+                    empleado_creador = Empleado.objects.filter(usuario=mantenimiento.creado_por).first()
+                    if empleado_creador and empleado_creador.fcm_token:
+                        print(f"DEBUG: Encontrado fcm_token para el creador. Enviando push notification.")
+                        fcm_data = {
+                            "id": str(notif_obj.id),
+                            "url_destino": notif_obj.url_destino,
+                            "tipo": notif_obj.tipo,
+                        }
+                        send_fcm_notification(
+                            fcm_token=empleado_creador.fcm_token,
+                            title=title_fcm,
+                            body=mensaje,
+                            data=fcm_data
+                        )
+                    else:
+                        print("DEBUG: El creador no tiene un fcm_token registrado. No se envía push notification.")
+
+                except Exception as e:
+                    logger.error(f"Error al crear notificación de actualización de estado: {e}")
+            else:
+                print("DEBUG: No se cumplieron todas las condiciones para enviar la notificación.")
+            print("--- FIN DEBUG ---")
+            # --- [FIN DE NUEVA LÓGICA] ---
 
             serializer = self.get_serializer(mantenimiento)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -1242,24 +1305,35 @@ class MantenimientoViewSet(BaseTenantViewSet):
         
     # --- [NUEVA FUNCIÓN HELPER] ---
     def _crear_notificacion_asignacion(self, mantenimiento_instance):
+        print("\n--- DEBUG: Invocando _crear_notificacion_asignacion ---")
         empleado_asignado = mantenimiento_instance.empleado_asignado
+        
         if empleado_asignado and hasattr(empleado_asignado, 'usuario'):
             destinatario_user = empleado_asignado.usuario
+            print(f"DEBUG: Tarea asignada a: {destinatario_user.username} (ID: {destinatario_user.id})")
+            print(f"DEBUG: Petición hecha por: {self.request.user.username} (ID: {self.request.user.id})")
+            
+            # No enviar notificación si se está auto-asignando la tarea
+            if self.request.user == destinatario_user:
+                print("DEBUG: Auto-asignación detectada. No se enviará notificación.")
+                return
+
             try:
                 mensaje = (f"Se te ha asignado una tarea de mantenimiento ({mantenimiento_instance.get_tipo_display()}) "
                            f"para el activo '{mantenimiento_instance.activo.nombre}'.")
-                title_fcm = "Nueva Asignación de Mantenimiento" # <--- NUEVO
+                title_fcm = "Nueva Asignación de Mantenimiento"
 
-                notif_obj = Notificacion.objects.create( # <--- Guardar la instancia
+                notif_obj = Notificacion.objects.create(
                     destinatario=destinatario_user,
                     mensaje=mensaje,
                     tipo='INFO',
-                    url_destino=f'/app/mantenimientos/{mantenimiento_instance.id}' # Enlace directo al mantenimiento
+                    url_destino=f'/app/mantenimientos'
                 )
-                print(f"DEBUG: Notificación de asignación creada para usuario {destinatario_user.id}")
+                print(f"DEBUG: Notificación de BD creada para {destinatario_user.username}.")
 
-                # --- [NUEVO] Enviar FCM Push Notification ---
+                # Enviar FCM Push Notification
                 if empleado_asignado.fcm_token:
+                    print(f"DEBUG: fcm_token encontrado para {destinatario_user.username}: '{empleado_asignado.fcm_token[:20]}...'")
                     fcm_data = {
                         "id": str(notif_obj.id),
                         "url_destino": notif_obj.url_destino,
@@ -1271,28 +1345,27 @@ class MantenimientoViewSet(BaseTenantViewSet):
                         body=mensaje,
                         data=fcm_data
                     )
-                    if not success:
+                    if success:
+                        print(f"DEBUG: Notificación Push enviada exitosamente a {destinatario_user.username}.")
+                    else:
                         logger.error(f"Error al enviar FCM para mantenimiento {mantenimiento_instance.id}: {response_fcm}")
+                else:
+                    print(f"DEBUG: No se encontró fcm_token para {destinatario_user.username}. No se envía Push.")
 
             except Exception as e:
                 print(f"ERROR: No se pudo crear notificación para mant. {mantenimiento_instance.id}. Error: {e}")
-        elif empleado_asignado:
-             print(f"WARN: Empleado {empleado_asignado.id} asignado a mant. {mantenimiento_instance.id} no tiene usuario asociado.")
+        else:
+            print("DEBUG: No hay empleado asignado a esta tarea. No se envía notificación de asignación.")
+        print("--- FIN DEBUG ---\n")
 
     # --- [ MÉTODO EDITADO ] ---
     def perform_create(self, serializer):
-        # Primero, guarda el mantenimiento normalmente (asignando la empresa del usuario creador)
-        mantenimiento = serializer.save(empresa=self.request.user.empleado.empresa)
+        # Asigna el usuario actual como creador y la empresa
+        mantenimiento = serializer.save(
+            empresa=self.request.user.empleado.empresa,
+            creado_por=self.request.user 
+        )
         # Luego, intenta crear la notificación para el asignado (si existe)
-        self._crear_notificacion_asignacion(mantenimiento)
-
-    # --- [ MÉTODO EDITADO ] ---
-    def perform_update(self, serializer):
-        # Guarda la actualización normalmente
-        mantenimiento = serializer.save()
-        # Comprueba si el empleado asignado cambió o si se asignó uno nuevo
-        # (Podrías hacer una lógica más compleja para notificar solo si cambia la asignación)
-        # Por simplicidad, notificamos siempre que haya alguien asignado tras guardar.
         self._crear_notificacion_asignacion(mantenimiento)
 
 class RevalorizacionActivoViewSet(BaseTenantViewSet):

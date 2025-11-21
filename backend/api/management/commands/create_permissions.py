@@ -43,6 +43,7 @@ PERMISSIONS_LIST = [
     # Reportes
     ('view_reporte', 'Acceder a la sección de reportes y generar vistas previas'),
     ('export_reporte', 'Exportar reportes a PDF/Excel'),
+    ('view_custom_reports', 'Ver reportes personalizados y avanzados'),
 
     # --- [NUEVO] Permisos de Revalorización ---
     ('view_revalorizacion', 'Ver el historial de revalorizaciones de activos'),
