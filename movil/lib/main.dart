@@ -74,20 +74,27 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 void onDidReceiveNotificationResponse(NotificationResponse notificationResponse) async {
   final String? payload = notificationResponse.payload;
   if (payload != null && payload.isNotEmpty) {
-    debugPrint('Notification payload: $payload');
-    // Navegar usando la GlobalKey
-    if (navigatorKey.currentState != null) {
-      if (payload.contains('/app/mantenimientos')) {
-        // Asumiendo que /app/mantenimientos lleva a la HomeScreen principal por ahora
-        // Y dentro de HomeScreen se gestionará la visualización específica
-        navigatorKey.currentState!.pushNamed('/home');
-        // Si quisieras ir a un detalle específico, necesitarías un sistema de ruteo más avanzado (ej. GoRouter)
-        // y pasar el ID del mantenimiento:
-        // navigatorKey.currentState!.pushNamed('/home', arguments: {'module': 'mantenimientos', 'id': extractId(payload)});
-      } else if (payload.contains('/app/solicitudes-compra')) {
-        navigatorKey.currentState!.pushNamed('/home');
+    debugPrint('Notification payload received: $payload');
+    
+    // Extraer el nombre del módulo de la URL. Ej: /app/solicitudes-compra -> solicitudes-compra
+    String? moduleName;
+    final uri = Uri.tryParse(payload);
+    if (uri != null && uri.pathSegments.length >= 2 && uri.pathSegments[0] == 'app') {
+      moduleName = uri.pathSegments[1];
+    }
+
+    if (moduleName != null) {
+      debugPrint('DEBUG: Navigating to /home with initialModule: $moduleName');
+      // Navegar usando la GlobalKey y pasando el módulo como argumento
+      if (navigatorKey.currentState != null) {
+        // Usamos pushNamed para ir a la pantalla de Home y le pasamos el módulo deseado
+        navigatorKey.currentState!.pushNamed(
+          '/home', 
+          arguments: {'initialModule': moduleName},
+        );
       }
-      // Añadir más lógica para otras rutas si es necesario
+    } else {
+      debugPrint('Could not determine module from payload: $payload');
     }
   }
 }

@@ -5,13 +5,15 @@ import { useAuth } from '../context/AuthContext';
 import { getNotificaciones, markNotificacionLeida, markAllNotificacionesLeidas } from '../api/dataService';
 import { useNotification as useAppNotification } from '../context/NotificacionContext';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom'; // Importar useNavigate
 
-function NotificationBell({ setCurrentPage }) {
+function NotificationBell() { // Quitar setCurrentPage de las props
     const [isOpen, setIsOpen] = useState(false);
     const [notificaciones, setNotificaciones] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const { showNotification } = useAppNotification();
     const { isAuthenticated } = useAuth();
+    const navigate = useNavigate(); // Inicializar useNavigate
 
     const fetchNotificaciones = useCallback(async () => {
         if (!isAuthenticated) return;
@@ -27,7 +29,6 @@ function NotificationBell({ setCurrentPage }) {
         }
     }, [isAuthenticated]);
 
-    // Cargar notificaciones al montar y luego cada 1 minuto (polling)
     useEffect(() => {
         fetchNotificaciones();
         const interval = setInterval(fetchNotificaciones, 60000);
@@ -50,15 +51,16 @@ function NotificationBell({ setCurrentPage }) {
         }
     };
     
+    // Función de navegación actualizada
     const handleNotificationClick = (notif) => {
         if (notif.url_destino) {
-            const moduleName = notif.url_destino.split('/')[2];
-            if (moduleName) {
-                setCurrentPage(moduleName);
-            }
+            navigate(notif.url_destino); // Usar navigate para redirigir
         }
         setIsOpen(false);
-        handleMarkAsRead(notif.id);
+        // Marcar como leída después de navegar
+        if (!notif.leido) {
+            handleMarkAsRead(notif.id);
+        }
     };
 
     const handleMarkAllAsRead = async () => {
@@ -115,7 +117,7 @@ function NotificationBell({ setCurrentPage }) {
                                     <div 
                                         key={notif.id} 
                                         onClick={() => handleNotificationClick(notif)}
-                                        className={`p-3 border-b border-theme last:border-b-0 flex gap-3 transition-colors ${notif.leido ? 'opacity-60' : 'hover:bg-tertiary cursor-pointer'}`}
+                                        className={`p-3 border-b border-theme last:border-b-0 flex gap-3 transition-colors ${!notif.leido ? 'hover:bg-tertiary cursor-pointer' : 'opacity-60'}`}
                                     >
                                         <div className="flex-shrink-0 mt-1">{getIcon(notif.tipo)}</div>
                                         <div className="flex-1">
@@ -154,13 +156,12 @@ const getInitials = (name) => {
     return (parts[0].substring(0, 2)).toUpperCase();
 };
 
-export default function Header({ onMenuClick, sidebarOpen, setCurrentPage }) { // <-- ACEPTAR PROP
+export default function Header({ onMenuClick, sidebarOpen }) { // <-- 'setCurrentPage' ELIMINADO
     const [showUserMenu, setShowUserMenu] = useState(false);
-    const { user, logout } = useAuth(); // <-- 2. Obtenemos 'user' y 'logout'
+    const { user, logout } = useAuth();
 
     return (
         <header className="bg-secondary border-b border-theme h-16 flex items-center justify-between px-4 md:px-8">
-            {/* ... (Botón de Menú) ... */}
             <button
                 onClick={onMenuClick}
                 className="md:hidden p-2 hover:bg-tertiary rounded-lg transition-colors text-primary"
@@ -170,8 +171,7 @@ export default function Header({ onMenuClick, sidebarOpen, setCurrentPage }) { /
 
             <div className="flex-1" />
 
-            {/* --- MENÚ DE USUARIO DINÁMICO --- */}
-            <NotificationBell setCurrentPage={setCurrentPage} /> {/* <-- PASAR PROP */}
+            <NotificationBell />
             <div className="relative">
                 <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
@@ -185,11 +185,10 @@ export default function Header({ onMenuClick, sidebarOpen, setCurrentPage }) { /
                     </span>
                 </button>
 
-                {/* Dropdown Menu */}
                 {showUserMenu && (
                     <div 
                         className="absolute right-0 mt-2 w-56 bg-secondary border border-theme rounded-lg shadow-lg z-50"
-                        onMouseLeave={() => setShowUserMenu(false)} // Opcional: cerrar al sacar el mouse
+                        onMouseLeave={() => setShowUserMenu(false)}
                     >
                         <div className="p-4 border-b border-theme">
                             <p className="text-primary font-medium">{user?.nombre_completo}</p>
@@ -206,7 +205,6 @@ export default function Header({ onMenuClick, sidebarOpen, setCurrentPage }) { /
                     </div>
                 )}
             </div>
-            {/* --- FIN DEL MENÚ --- */}
         </header>
     );
 }

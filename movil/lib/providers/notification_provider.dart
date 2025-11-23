@@ -49,35 +49,41 @@ class NotificationProvider with ChangeNotifier {
   }
 
   Future<void> markNotificationAsRead(String notificationId) async {
+    final index = _notifications.indexWhere((n) => n.id == notificationId);
+    if (index == -1 || _notifications[index].leido) return; // No hacer nada si no se encuentra o ya está leída
+
     try {
       await _apiService.markNotificationAsRead(notificationId);
-      final index = _notifications.indexWhere((n) => n.id == notificationId);
-      if (index != -1 && !_notifications[index].leido) {
-        _notifications[index].leido = true;
-        _unreadCount--;
-        notifyListeners();
-      }
-      debugPrint("Notification $notificationId marked as read locally.");
+      // Crear una nueva lista con el elemento actualizado de forma inmutable
+      _notifications = [
+        for (int i = 0; i < _notifications.length; i++)
+          if (i == index)
+            _notifications[i].copyWith(leido: true)
+          else
+            _notifications[i],
+      ];
+      _unreadCount--;
+      notifyListeners();
+      debugPrint("Notification $notificationId marked as read.");
     } catch (e) {
       _errorMessage = e.toString();
       debugPrint("Error marking notification $notificationId as read: $_errorMessage");
-      rethrow;
+      // No re-lanzar el error para no romper la UI
     }
   }
 
   Future<void> markAllNotificationsAsRead() async {
     try {
       await _apiService.markAllNotificationsAsRead();
-      for (var n in _notifications) {
-        n.leido = true;
-      }
+      // Crear una nueva lista con TODOS los elementos marcados como leídos
+      _notifications = _notifications.map((n) => n.copyWith(leido: true)).toList();
       _unreadCount = 0;
       notifyListeners();
-      debugPrint("All notifications marked as read locally.");
+      debugPrint("All notifications marked as read.");
     } catch (e) {
       _errorMessage = e.toString();
       debugPrint("Error marking all notifications as read: $_errorMessage");
-      rethrow;
+      // No re-lanzar el error para no romper la UI
     }
   }
 

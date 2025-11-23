@@ -97,6 +97,16 @@ class ApiService {
     }
   }
 
+  Future<void> unregisterFCMToken() async {
+    try {
+      await _dio.delete('/fcm-token/');
+      debugPrint("ApiService: FCM token unregistered from backend.");
+    } on DioException catch (e) {
+      // Don't throw an error, just log it. Logout should proceed anyway.
+      debugPrint("ApiService: Failed to unregister FCM token from backend: ${e.message}");
+    }
+  }
+
   // --- Notifications ---
   Future<List<Notification>> getNotifications() => _fetchList('/notificaciones/', Notification.fromJson);
 
@@ -474,23 +484,17 @@ class ApiService {
     }
   }
 
-  Future<SolicitudCompra> aprobarSolicitud(String id, Map<String, dynamic> data) async {
+  Future<SolicitudCompra> decidirSolicitud(String id, String decision, {String? motivo}) async {
     try {
-      final response = await _dio.post('/solicitudes-compra/$id/aprobar/', data: data);
-      await logAction('APPROVE: SolicitudCompra', {'id': id});
+      final Map<String, dynamic> data = {'decision': decision};
+      if (motivo != null) {
+        data['motivo_rechazo'] = motivo;
+      }
+      final response = await _dio.post('/solicitudes-compra/$id/decidir/', data: data);
+      await logAction('DECIDE: SolicitudCompra', {'id': id, 'decision': decision});
       return SolicitudCompra.fromJson(response.data);
     } on DioException catch (e) {
-      throw Exception('Error al aprobar solicitud: ${e.response?.data?['detail'] ?? e.message}');
-    }
-  }
-
-  Future<SolicitudCompra> rechazarSolicitud(String id, Map<String, dynamic> data) async {
-    try {
-      final response = await _dio.post('/solicitudes-compra/$id/rechazar/', data: data);
-      await logAction('REJECT: SolicitudCompra', {'id': id, 'motivo_rechazo': data['motivo_rechazo']});
-      return SolicitudCompra.fromJson(response.data);
-    } on DioException catch (e) {
-      throw Exception('Error al rechazar solicitud: ${e.response?.data?['detail'] ?? e.message}');
+      throw Exception('Error al decidir sobre la solicitud: ${e.response?.data?['detail'] ?? e.message}');
     }
   }
 
@@ -560,14 +564,25 @@ class ApiService {
   // --- Mantenimientos ---
   Future<List<Mantenimiento>> getMantenimientos() => _fetchList('/mantenimientos/', Mantenimiento.fromJson);
 
+  Future<Mantenimiento> getMantenimiento(String id) async {
+    try {
+      final response = await _dio.get('/mantenimientos/$id/');
+      return Mantenimiento.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception('Error al cargar mantenimiento: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
   Future<Mantenimiento> createMantenimiento(Map<String, dynamic> data, List<XFile> newPhotos) async {
     try {
       List<MultipartFile> photoFiles = [];
       for (var file in newPhotos) {
         photoFiles.add(await MultipartFile.fromFile(file.path, filename: file.name));
       }
-      data['fotos_nuevas'] = photoFiles;
       final formData = FormData.fromMap(data);
+      if (photoFiles.isNotEmpty) {
+        formData.files.addAll(photoFiles.map((file) => MapEntry('fotos_nuevas[]', file)));
+      }
       
       final response = await _dio.post('/mantenimientos/', data: formData);
       await logAction('CREATE: Mantenimiento', {'id': response.data['id'], 'activo_id': data['activo_id'], 'tipo': data['tipo']});
@@ -585,9 +600,11 @@ class ApiService {
       for (var file in newPhotos) {
         photoFiles.add(await MultipartFile.fromFile(file.path, filename: file.name));
       }
-      data['fotos_nuevas'] = photoFiles;
       data['fotos_a_eliminar'] = deletedPhotos;
       final formData = FormData.fromMap(data, ListFormat.multiCompatible);
+      if (photoFiles.isNotEmpty) {
+        formData.files.addAll(photoFiles.map((file) => MapEntry('fotos_nuevas[]', file)));
+      }
 
       final response = await _dio.patch('/mantenimientos/$id/', data: formData);
       await logAction('UPDATE: Mantenimiento', {'id': id, 'activo_id': data['activo_id'], 'estado': data['estado']});

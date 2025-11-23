@@ -266,7 +266,10 @@ class AppDrawer extends StatelessWidget {
         ),
       ),
       selected: isSelected,
-      onTap: () => onNavigate(pageKey),
+      onTap: () {
+        onNavigate(pageKey);
+        Navigator.pop(context); // Cierra el drawer después de la navegación
+      },
     );
   }
 }

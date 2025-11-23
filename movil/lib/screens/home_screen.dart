@@ -5,15 +5,17 @@ import 'package:provider/provider.dart';
 import 'dart:async'; // <--- NUEVO
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_messaging/firebase_messaging.dart'; // <--- NUEVO
-import 'package:movil/main.dart';
+import 'package:movil/main.dart' as main_app; // Alias para evitar conflicto con main()
 import 'package:flutter_local_notifications/flutter_local_notifications.dart'; // <--- NUEVO
 import 'dart:convert'; // For jsonEncode
+import 'package:intl/intl.dart'; // <-- AÑADIR ESTA LÍNEA
+
 import '../providers/notification_provider.dart'; // <--- NUEVO
 import '../models/notification.dart' as app_notification; // <--- NUEVO
 
 import '../widgets/app_drawer.dart'; // El menú lateral
 import '../providers/auth_provider.dart'; // Para los datos del usuario
-import '../utils/helpers.dart'; // Para la función getInitials
+import '../utils/helpers.dart'; // Para la función getInitials y extractIdFromUrl
 
 // Importar las pantallas de los módulos
 import 'departamentos_screen.dart';
@@ -46,11 +48,13 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String _selectedPageKey = 'dashboard';
-  Timer? _notificationTimer; // Nuevo
+  Timer? _notificationTimer;
+  bool _didProcessInitialRoute = false; // Flag para ejecutar la lógica solo una vez
 
   @override
   void initState() {
     super.initState();
+    debugPrint("DEBUG: HomeScreen initState()");
     // Fetch notifications once when the screen is initialized
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<NotificationProvider>(context, listen: false).fetchNotifications();
@@ -62,6 +66,28 @@ class _HomeScreenState extends State<HomeScreen> {
       // --- NUEVO: FCM Foreground & OpenedApp Message Handling ---
       _setupFCMListeners();
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_didProcessInitialRoute) {
+      debugPrint("DEBUG: didChangeDependencies() - Procesando ruta inicial por primera vez.");
+      final arguments = ModalRoute.of(context)?.settings.arguments;
+      if (arguments is Map && arguments.containsKey('initialModule')) {
+        final initialModule = arguments['initialModule'] as String;
+        debugPrint("DEBUG: didChangeDependencies() - Argumento 'initialModule' encontrado: '$initialModule'");
+        if (_pages.containsKey(initialModule)) {
+          // Usa la nueva función de navegación segura
+          _onNavigate(initialModule);
+        } else {
+          debugPrint("DEBUG: didChangeDependencies() - El módulo '$initialModule' no es una página válida.");
+        }
+      } else {
+        debugPrint("DEBUG: didChangeDependencies() - No se encontraron argumentos de ruta para 'initialModule'.");
+      }
+      _didProcessInitialRoute = true;
+    }
   }
 
   @override
@@ -80,7 +106,7 @@ class _HomeScreenState extends State<HomeScreen> {
       if (message.notification != null) {
         debugPrint('Message also contained a notification: ${message.notification}');
         // --- NUEVO: Display local notification for foreground messages ---
-        flutterLocalNotificationsPlugin.show(
+        main_app.flutterLocalNotificationsPlugin.show(
           message.hashCode, // Unique ID for the notification
           message.notification!.title,
           message.notification!.body,
@@ -94,7 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ticker: 'ticker',
             ),
           ),
-          payload: jsonEncode(message.data), // Pass data as payload
+          payload: message.data['url_destino'], // Pass ONLY the URL as payload
         );
         // --- FIN NUEVO ---
       }
@@ -116,25 +142,46 @@ class _HomeScreenState extends State<HomeScreen> {
     // Check if the message contains data for navigation
     final String? urlDestino = message.data['url_destino'];
     if (urlDestino != null) {
-      String? pageKey = _extractPageKeyFromUrl(urlDestino);
-      if (pageKey != null && _pages.containsKey(pageKey)) {
+      final String? moduleKey = _extractPageKeyFromUrl(urlDestino);
+      final String? id = extractIdFromUrl(urlDestino); // Use the helper from main.dart
+
+      if (moduleKey == 'mantenimientos' && id != null) {
+        debugPrint('FCM: Navegando a detalle de mantenimiento desde Home: $id');
+        Future.delayed(const Duration(milliseconds: 500), () {
+          main_app.navigatorKey.currentState!.pushNamed('/mantenimiento-detail', arguments: id);
+        });
+      } else if (moduleKey != null && _pages.containsKey(moduleKey)) {
         // Delay navigation slightly to allow UI to update or modal to close
         Future.delayed(const Duration(milliseconds: 500), () {
-          _onNavigate(pageKey);
+          _onNavigate(moduleKey);
         });
       } else {
-        debugPrint('FCM: URL destino no mapeado a una página: $urlDestino');
+        debugPrint('FCM: URL destino no mapeado a una página o sin ID válido: $urlDestino');
       }
     }
   }
 
-  // Callback que el AppDrawer usará para cambiar de página
+  // Callback mejorado para cambiar de página de forma segura
   void _onNavigate(String pageKey) {
-    if (pageKey.isEmpty) return;
-    setState(() {
-      _selectedPageKey = pageKey;
+    debugPrint("DEBUG: _onNavigate() - Solicitado navegar a: '$pageKey'");
+    // Evita reconstrucciones innecesarias si la página ya está seleccionada
+    if (pageKey.isEmpty || _selectedPageKey == pageKey) {
+      debugPrint("DEBUG: _onNavigate() - Navegación omitida (misma página o clave vacía).");
+      return;
+    }
+    
+    // Asegura que setState se llame después de que el frame actual se haya renderizado,
+    // evitando conflictos con otras animaciones o reconstrucciones (como cerrar un modal).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) { // Comprueba si el widget todavía está en el árbol de widgets
+        debugPrint("DEBUG: _onNavigate() - Ejecutando setState para cambiar a: '$pageKey'");
+        setState(() {
+          _selectedPageKey = pageKey;
+        });
+      } else {
+        debugPrint("DEBUG: _onNavigate() - El widget fue desmontado antes de que setState pudiera ejecutarse.");
+      }
     });
-    Navigator.pop(context); // Cierra el drawer automáticamente
   }
   
   // Mapa de todas las pantallas/widgets de los módulos
@@ -164,6 +211,7 @@ class _HomeScreenState extends State<HomeScreen> {
   
   @override
   Widget build(BuildContext context) {
+    debugPrint("DEBUG: HomeScreen build() - Página actual: '$_selectedPageKey'");
     // Usamos 'watch' (context.watch) para que el widget se reconstruya
     // si el usuario cambia (ej. al cerrar sesión)
     final auth = context.watch<AuthProvider>();
@@ -294,30 +342,36 @@ class _HomeScreenState extends State<HomeScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: InkWell(
         onTap: () async {
-          // Mark as read if not already read
-          if (!notification.leido) {
-            // Access the NotificationProvider instance
-            final notificationProvider = Provider.of<NotificationProvider>(context, listen: false);
-            await notificationProvider.markNotificationAsRead(notification.id);
-          }
-          // Handle navigation
+          String? pageKey;
           if (notification.urlDestino != null) {
-            String? pageKey = _extractPageKeyFromUrl(notification.urlDestino!);
+            pageKey = _extractPageKeyFromUrl(notification.urlDestino!);
+            debugPrint("DEBUG: Notification Tapped - URL: '${notification.urlDestino}', PageKey extraído: '$pageKey'");
             if (pageKey != null && _pages.containsKey(pageKey)) {
-              onNavigateCallback(pageKey); // Call the navigation callback
+              onNavigateCallback(pageKey); // Llama a la función _onNavigate actualizada
             } else {
-              // Handle deep linking or unmapped URLs
-              debugPrint('Unhandled navigation URL: ${notification.urlDestino}');
+              debugPrint("DEBUG: Notification Tapped - PageKey no válido o no encontrado en _pages.");
             }
           }
-          Navigator.of(context).pop(); // Close the sheet after action
+          
+          // Cierra el modal de notificaciones
+          Navigator.of(context).pop();
+
+          // Marca la notificación como leída (esto puede ocurrir después de que el modal se cierre)
+          if (!notification.leido) {
+            try {
+              // Usamos listen: false porque estamos en un callback
+              await Provider.of<NotificationProvider>(context, listen: false).markNotificationAsRead(notification.id);
+            } catch (e) {
+              debugPrint("Error al marcar notificación como leída: $e");
+            }
+          }
         },
         child: Padding(
           padding: const EdgeInsets.all(12.0),
           child: Row(
             children: [
               Icon(
-                notification.leido ? LucideIcons.bell : LucideIcons.bellDot, // Use bellDot for unread
+                notification.leido ? LucideIcons.bell : LucideIcons.bellDot,
                 color: notification.leido ? Colors.grey : Theme.of(context).colorScheme.primary,
                 size: 28,
               ),
@@ -330,24 +384,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       notification.mensaje,
                       style: TextStyle(
                         fontWeight: notification.leido ? FontWeight.normal : FontWeight.bold,
-                        color: notification.leido ? Colors.grey[800] : null,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${notification.tipoDisplay} - ${notification.timestamp.toLocal().toString().substring(0, 16)}',
-                      style: TextStyle(
-                        color: notification.leido ? Colors.grey[500] : null,
-                        fontSize: 12,
-                      ),
+                      '${notification.tipoDisplay} - ${DateFormat('dd/MM/yy HH:mm').format(notification.timestamp.toLocal())}',
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
                 ),
               ),
               if (notification.urlDestino != null)
-                const Icon(Icons.arrow_forward_ios, size: 20, color: Colors.grey),
+                const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
             ],
           ),
         ),
@@ -412,15 +462,18 @@ class _HomeScreenState extends State<HomeScreen> {
                         if (unreadNotifications.isNotEmpty)
                           TextButton(
                             onPressed: () async {
-                              // Show loading indicator
                               showDialog(
                                 context: context,
                                 builder: (context) => const Center(child: CircularProgressIndicator()),
                                 barrierDismissible: false,
                               );
-                              await notificationProvider.markAllNotificationsAsRead();
-                              Navigator.of(context).pop(); // Close loading indicator
-                              // Navigator.of(context).pop(); // Keep modal open after marking all as read for better UX
+                              try {
+                                await notificationProvider.markAllNotificationsAsRead();
+                              } finally {
+                                if (context.mounted) {
+                                  Navigator.of(context).pop(); // Cierra el diálogo de carga
+                                }
+                              }
                             },
                             child: const Text('Marcar todas como leídas'),
                           ),

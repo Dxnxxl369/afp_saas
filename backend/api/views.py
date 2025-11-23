@@ -463,6 +463,59 @@ class SolicitudCompraViewSet(BaseTenantViewSet):
             qs = qs.filter(solicitante=self.request.user)
         return qs
 
+    def perform_create(self, serializer):
+        """
+        Sobrescrito para guardar la solicitud y luego notificar a los administradores.
+        """
+        # Guardar la solicitud de compra, asignando la empresa del usuario actual.
+        solicitud = serializer.save(empresa=self.request.user.empleado.empresa)
+        solicitante_nombre = solicitud.solicitante.get_full_name() or solicitud.solicitante.username
+
+        # --- Lógica para Notificar a los Administradores ---
+        try:
+            # 1. Encontrar a todos los empleados con el rol 'Admin' en la misma empresa.
+            admins = Empleado.objects.filter(empresa=solicitud.empresa, roles__nombre='Admin').select_related('usuario')
+
+            if not admins.exists():
+                logger.warning(f"No se encontraron administradores en la empresa {solicitud.empresa.nombre} para notificar sobre la solicitud {solicitud.id}.")
+                return
+
+            # 2. Preparar el contenido de la notificación.
+            mensaje = f"{solicitante_nombre} ha creado una nueva solicitud de compra: '{solicitud.descripcion[:35]}...'."
+            title_fcm = "Nueva Solicitud de Compra"
+            url_destino = '/app/solicitudes-compra'
+            
+            # 3. Iterar sobre los admins y enviarles las notificaciones.
+            for admin_empleado in admins:
+                # Evitar notificar al usuario que creó la solicitud si también es admin.
+                if admin_empleado.usuario == solicitud.solicitante:
+                    continue
+
+                # Crear la notificación web (para la campanita)
+                notif_obj = Notificacion.objects.create(
+                    destinatario=admin_empleado.usuario,
+                    mensaje=mensaje,
+                    tipo='INFO',
+                    url_destino=url_destino
+                )
+
+                # Si el admin tiene un token FCM, enviar notificación push.
+                if admin_empleado.fcm_token:
+                    fcm_data = {
+                        "id": str(notif_obj.id),
+                        "url_destino": url_destino,
+                        "tipo": notif_obj.tipo,
+                    }
+                    send_fcm_notification(
+                        fcm_token=admin_empleado.fcm_token,
+                        title=title_fcm,
+                        body=mensaje,
+                        data=fcm_data
+                    )
+        except Exception as e:
+            # Es importante que la creación de la solicitud no falle si las notificaciones fallan.
+            logger.error(f"Error al intentar notificar a los administradores sobre la nueva solicitud {solicitud.id}: {e}")
+
     @action(detail=True, methods=['post'], url_path='decidir')
     def decidir(self, request, pk=None):
         if not check_permission(request, self, 'approve_solicitud_compra'):
@@ -495,6 +548,7 @@ class SolicitudCompraViewSet(BaseTenantViewSet):
             if decision == 'aprobar':
                 tipo_notif = 'INFO'
                 mensaje = f"Tu solicitud de compra para '{solicitud.descripcion}' ha sido APROBADA."
+                title_fcm = "Solicitud Aprobada"
             else: # 'rechazar'
                 tipo_notif = 'ADVERTENCIA'
                 mensaje = f"Tu solicitud de compra para '{solicitud.descripcion}' fue RECHAZADA."
@@ -1778,13 +1832,13 @@ class NotificacionViewSet(BaseTenantViewSet):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=['post'], url_path='marcar-todo-leido')
+    @action(detail=False, methods=['post'], url_path='marcar-todo-leido', permission_classes=[IsAuthenticated])
     def marcar_todo_leido(self, request):
         """Marcar todas las del usuario como leídas."""
         try:
             # --- [CAMBIO] Filtrar por destinatario ---
             count, _ = Notificacion.objects.filter(destinatario=request.user, leido=False).update(leido=True)
-            return Response({'status': f'{count} notificaciines marcadas como leídas'}, status=status.HTTP_200_OK)
+            return Response({'status': f'{count} notificaciones marcadas como leídas'}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1812,3 +1866,20 @@ class FCMTokenView(APIView):
         except Exception as e:
             logger.error(f"Error saving FCM token for user {request.user.id}: {e}", exc_info=True)
             return Response({'detail': 'Error interno al guardar el token FCM.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def delete(self, request, *args, **kwargs):
+        """
+        Elimina el token FCM del perfil del empleado al cerrar sesión.
+        """
+        try:
+            empleado = request.user.empleado
+            if empleado.fcm_token:
+                empleado.fcm_token = None
+                empleado.save(update_fields=['fcm_token'])
+            return Response({'detail': 'FCM token eliminado exitosamente.'}, status=status.HTTP_200_OK)
+        except Empleado.DoesNotExist:
+            # Si no hay empleado, no hay nada que hacer. Devuelve éxito silenciosamente.
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            logger.error(f"Error deleting FCM token for user {request.user.id}: {e}", exc_info=True)
+            return Response({'detail': 'Error interno al eliminar el token FCM.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

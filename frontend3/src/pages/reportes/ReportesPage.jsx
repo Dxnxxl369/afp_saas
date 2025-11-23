@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import ActivosReport from './ActivosReport'; // Importar el nuevo componente de reporte de activos
-import PresupuestosReport from './PresupuestosReport'; // Importar el nuevo componente de reporte de presupuestos
+ // Importar el nuevo componente de reporte de presupuestos
 
 export default function ReportesPage() {
     const [activeReportTab, setActiveReportTab] = useState('activos'); // 'activos' o 'presupuestos'
@@ -24,14 +24,7 @@ export default function ReportesPage() {
                 >
                     Reporte de Activos Fijos
                 </button>
-                <button
-                    onClick={() => setActiveReportTab('presupuestos')}
-                    className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
-                        activeReportTab === 'presupuestos' ? 'bg-accent text-white' : 'bg-tertiary text-primary hover:bg-opacity-80'
-                    }`}
-                >
-                    Reporte de Presupuestos
-                </button>
+                
             </div>
 
             {/* Contenido del Reporte Seleccionado */}

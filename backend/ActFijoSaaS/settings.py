@@ -119,7 +119,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
     "http://localhost:5174", # Para React en desarrollo
     "http://127.0.0.1:5174",
-    "http://192.168.0.13"
+    "http://192.168.0.13",
+    "http://192.168.3.37"
 ]
 CORS_ALLOW_ALL_ORIGINS = False # Mantenlo en False por seguridad
 CORS_ALLOW_CREDENTIALS = True

@@ -1,0 +1,22 @@
+**Funcionamiento Resumido de Notificaciones Push (Caso: Tarea de Mantenimiento Asignada)**
+
+Cuando una tarea de mantenimiento es asignada a un empleado en el sistema, el flujo de la notificación push es el siguiente:
+
+1.  **Backend (Django):**
+    *   Al crear o actualizar una tarea de mantenimiento y asignarla a un empleado, el backend verifica si este empleado tiene un `fcm_token` (un identificador de su dispositivo móvil) registrado.
+    *   El backend genera un mensaje con un **título** (ej., "Nueva Asignación de Mantenimiento"), un **mensaje** (ej., "Se te ha asignado una tarea...") y, crucialmente, un **`url_destino`** (ej., `"/app/mantenimientos/ID_TAREA"`) dentro de un paquete de datos (`payload`).
+    *   Este paquete se envía a los servidores de Firebase Cloud Messaging (FCM).
+
+2.  **Firebase Cloud Messaging (FCM):**
+    *   FCM recibe el mensaje del backend.
+    *   Lo entrega al dispositivo móvil del empleado que tiene el `fcm_token` correspondiente.
+
+3.  **Aplicación Móvil (Flutter):**
+    *   **Recepción:** El dispositivo del empleado recibe el mensaje de FCM.
+        *   Si la app está activa, lo muestra inmediatamente como una notificación local en pantalla.
+        *   Si la app está cerrada o en segundo plano, un proceso en segundo plano (background handler) recibe el mensaje y también dispara una notificación local.
+    *   **Interacción:** Cuando el empleado toca la notificación:
+        *   La aplicación lee el `url_destino` del `payload`.
+        *   Utiliza este `url_destino` para navegar directamente a la pantalla específica dentro de la app que muestra los detalles de esa tarea de mantenimiento asignada.
+
+Este proceso asegura que el empleado sea notificado instantáneamente sobre su nueva tarea y pueda acceder a los detalles con un solo toque, mejorando la eficiencia y la respuesta.

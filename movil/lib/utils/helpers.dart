@@ -19,3 +19,15 @@ String getInitials(String? fullName) {
   
   return initials.toUpperCase();
 }
+
+// Helper para extraer el ID de una URL de detalle
+String? extractIdFromUrl(String url) {
+  final uri = Uri.parse(url);
+  final segments = uri.pathSegments;
+  // Asumimos que la URL es del tipo /app/modulo/id
+  // y que el ID es el último segmento
+  if (segments.isNotEmpty && segments.length > 2) { 
+    return segments.last;
+  }
+  return null;
+}

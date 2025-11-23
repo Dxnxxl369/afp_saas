@@ -5,9 +5,9 @@ class Notification {
   final String id;
   final DateTime timestamp;
   final String mensaje;
-  final String tipo; // e.g., 'INFO', 'ADVERTENCIA', 'ERROR'
-  bool leido; // This will be mutable as its status changes
-  final String? urlDestino; // e.g., '/app/mantenimientos'
+  final String tipo;
+  final bool leido;
+  final String? urlDestino;
 
   Notification({
     required this.id,
@@ -40,7 +40,26 @@ class Notification {
     };
   }
 
-  // Helper to get display name for type (similar to Django's get_tipo_display)
+  // Método para crear una copia del objeto con valores modificados
+  Notification copyWith({
+    String? id,
+    DateTime? timestamp,
+    String? mensaje,
+    String? tipo,
+    bool? leido,
+    String? urlDestino,
+  }) {
+    return Notification(
+      id: id ?? this.id,
+      timestamp: timestamp ?? this.timestamp,
+      mensaje: mensaje ?? this.mensaje,
+      tipo: tipo ?? this.tipo,
+      leido: leido ?? this.leido,
+      urlDestino: urlDestino ?? this.urlDestino,
+    );
+  }
+
+  // Helper to get display name for type
   String get tipoDisplay {
     switch (tipo) {
       case 'ADVERTENCIA':

@@ -41,7 +41,7 @@ class SolicitudCompraProvider with ChangeNotifier {
 
   Future<void> aprobarSolicitud(String id) async {
     try {
-      final updatedSolicitud = await _apiService.aprobarSolicitud(id, {});
+      final updatedSolicitud = await _apiService.decidirSolicitud(id, 'aprobar');
       _updateSolicitudInList(updatedSolicitud);
     } catch (e) {
       rethrow;
@@ -50,7 +50,7 @@ class SolicitudCompraProvider with ChangeNotifier {
 
   Future<void> rechazarSolicitud(String id, String motivo) async {
     try {
-      final updatedSolicitud = await _apiService.rechazarSolicitud(id, {'motivo_rechazo': motivo});
+      final updatedSolicitud = await _apiService.decidirSolicitud(id, 'rechazar', motivo: motivo);
       _updateSolicitudInList(updatedSolicitud);
     } catch (e) {
       rethrow;

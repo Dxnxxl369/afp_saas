@@ -1,0 +1,101 @@
+**Flujo de Lógica del Módulo de Reportes (Frontend: React)**
+
+Este documento detalla cómo el módulo de reportes en el frontend (React) procesa los comandos de voz y las solicitudes a la base de datos, según el análisis del archivo `frontend3/src/pages/reportes/ActivosReport.jsx`.
+
+---
+
+### **1. Recepción del Comando de Voz**
+
+El sistema utiliza la funcionalidad de reconocimiento de voz nativa del navegador web.
+
+*   **API de Reconocimiento de Voz:**
+    *   La aplicación detecta y utiliza la API `SpeechRecognition` (o `webkitSpeechRecognition`) disponible en el objeto `window` del navegador.
+    *   Se verifica la disponibilidad de esta API mediante `const hasSpeechRecognition = !!SpeechRecognition;`.
+*   **Activación:**
+    *   Cuando el usuario hace clic en el botón del micrófono (`<Mic />`) en la interfaz, se invoca la función `startListening()`.
+    *   Esta función crea una nueva instancia de `SpeechRecognition`.
+    *   **Configuración:** La instancia se configura con:
+        *   `lang = 'es-ES'`: Idioma español.
+        *   `continuous = false`: El reconocimiento se detendrá después de que el usuario haga una pausa, o después de un corto tiempo.
+        *   `interimResults = false`: Solo se proporcionarán resultados finales y estables (no resultados provisionales mientras se habla).
+    *   **Inicio de Escucha:** `recognition.start()` inicia el proceso de escucha del micrófono del usuario.
+*   **Captura y Procesamiento del Resultado:**
+    *   Una vez que el motor de reconocimiento de voz detecta y procesa el habla del usuario, se dispara el evento `recognition.onresult`.
+    *   El texto reconocido (transcripción) se extrae de `event.results[0][0].transcript`.
+*   **Manejo de Errores y Fin:**
+    *   `recognition.onerror`: Se utiliza para capturar y notificar errores durante el reconocimiento (por ejemplo, si no se detecta voz (`'no-speech'`) o si hay un error general del sistema).
+    *   `recognition.onend`: Se dispara cuando el servicio de reconocimiento de voz se detiene.
+
+---
+
+### **2. Procesamiento de la Palabra Clave y Clasificación del Filtro**
+
+Una vez que se obtiene la transcripción de voz, la aplicación la procesa para identificar filtros.
+
+*   **Limpieza de la Transcripción:**
+    *   La `transcript` inicial se limpia eliminando cualquier signo de puntuación final (como puntos, comas, etc.) usando una expresión regular (`.replace(/[.,!?;]+$/, "")`).
+    *   Se eliminan espacios en blanco al inicio y al final (`.trim()`).
+*   **Tokenización:**
+    *   La transcripción limpia se convierte a minúsculas (`.toLowerCase()`) para estandarización.
+    *   Se divide en palabras individuales utilizando el espacio como delimitador (`.split(" ")`).
+    *   Las palabras vacías resultantes se eliminan (`.filter(Boolean)`).
+*   **Lógica de Interpretación de Palabras Clave:**
+    *   La aplicación itera sobre este array de `words` (`const words = ...`).
+    *   Utiliza una serie de condiciones `if/else if` para detectar patrones de palabras clave que indican un tipo de filtro específico. Este proceso es manual y basado en reglas:
+        *   **Filtros de Texto Directo (e.g., "laptop"):** Si una palabra no es una palabra clave de filtro estructurado o una palabra de "ruido" (`"mostrar"`, `"activos"`, `"a"`), se añade directamente como un filtro.
+        *   **Filtros de Categoría/Departamento/Ubicación:**
+            *   Si detecta "depto" o "departamento" seguido de otra palabra, asume que la segunda palabra es el valor del filtro y lo formatea como `depto:[nombre_departamento]`.
+            *   Similarmente para "categoría" / "categoria" (`categoria:[nombre_categoria]`) y "ubicación" / "ubicacion" (`ubicacion:[nombre_ubicacion]`).
+            *   Los índices (`i += 2`) se ajustan para consumir la palabra clave y su valor.
+        *   **Filtros de Rango de Valor:**
+            *   Detecta patrones como "valor" + ("mayor" o ">") + "a" + [número] para filtros `valor>[número]`.
+            *   Similar para "menor" o "<" (`valor<[número]`) e "igual" o "=" (`valor=[número]`).
+            *   Los índices (`i += 4`) se ajustan para consumir todas las palabras del patrón.
+*   **Acumulación de Filtros:** Los filtros identificados se añaden al estado `filters` del componente React, que es un array de strings (ej: `["depto: TI", "laptop", "valor>500"]`).
+
+---
+
+### **3. Construcción y Envío de la Solicitud a la Base de Datos (Backend)**
+
+Una vez que los filtros se han acumulado, se utilizan para consultar el backend.
+
+*   **Activación de la Solicitud:**
+    *   El usuario hace clic en el botón "Generar Vista Previa", lo que invoca la función `handleGenerarReporte()`.
+    *   Esta función primero valida si hay al menos un filtro presente.
+*   **Construcción del Payload:**
+    *   La función toma el array de `filters` (ej: `["depto: TI", "laptop", "valor>500"]`) del estado del componente.
+    *   Envía este array como parte del cuerpo de la solicitud (payload) a la capa de servicios de la aplicación.
+*   **Capa de Servicio (Frontend):**
+    *   Se utiliza la función `getReportePorQuery` importada desde `../../api/dataService.js`.
+    *   Esta función (`getReportePorQuery`) es responsable de realizar la llamada HTTP real al backend. Asumo que usa una librería como `axios` (visto en análisis previos) para esto.
+    *   La llamada HTTP es probablemente un método `POST` al endpoint `/api/reportes/query/` del backend. El `filters` array se envía dentro del cuerpo de la solicitud como un objeto JSON (ej: `{"filters": ["depto: TI", "laptop", "valor>500"]}`).
+*   **Procesamiento en el Backend (Django):**
+    *   El backend de Django recibe esta solicitud `POST` en el endpoint configurado para `reportes/query/`.
+    *   Un `serializer` o lógica dentro de la vista de Django procesa el array `filters` recibido.
+    *   El backend interpreta cada string de filtro. Por ejemplo, `depto: TI` se traduciría en una condición de consulta para la base de datos como `departamento__nombre='TI'`. `valor>500` se convertiría en `valor_actual__gt=500`.
+    *   El backend construye una consulta dinámica a la base de datos (PostgreSQL, según la configuración), aplicando todos los filtros interpretados.
+    *   Ejecuta esta consulta y recupera los activos fijos que cumplen con todos los criterios.
+*   **Respuesta del Backend:**
+    *   El backend envía una respuesta HTTP con un cuerpo JSON que contiene los datos de los activos fijos encontrados (o un array vacío si no hay resultados).
+
+---
+
+### **4. Visualización de Resultados y Exportación**
+
+Los datos recibidos del backend se muestran y pueden ser exportados.
+
+*   **Actualización de la Interfaz:**
+    *   El frontend recibe la respuesta del backend.
+    *   Los datos se almacenan en el estado `resultados` del componente `ActivosReport.jsx`.
+    *   La interfaz de usuario se actualiza para mostrar una tabla con los activos fijos encontrados, incluyendo sus nombres, departamento, ubicación y valor.
+*   **Funcionalidad de Exportación:**
+    *   Los botones "PDF" y "Excel" permiten exportar los resultados.
+    *   Al hacer clic, se llama a `handleExportar(format)`, que a su vez invoca `downloadReportePorQuery` de `api/dataService.js`.
+    *   `downloadReportePorQuery` realiza otra llamada al backend, probablemente a un endpoint similar (ej: `/api/reportes/download/`), enviando los mismos `filters` y un parámetro `format` (ej: `'pdf'` o `'excel'`).
+    *   El backend genera el archivo correspondiente (PDF o Excel) y lo envía al frontend para su descarga por parte del usuario.
+
+---
+
+En resumen, el módulo de reportes aprovecha el reconocimiento de voz del navegador para una entrada de datos flexible, interpreta estos comandos en una estructura de filtros definida por reglas, y luego interactúa con un backend robusto que transforma estos filtros en consultas de base de datos dinámicas, entregando los resultados para análisis en pantalla o para exportación.
+
+---

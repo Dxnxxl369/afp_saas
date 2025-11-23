@@ -161,21 +161,20 @@ class AuthProvider with ChangeNotifier {
   }
   
   Future<void> logout() async {
+    // Primero, intenta anular el registro del token FCM en el backend.
+    // Esto es importante hacerlo mientras el token de autenticación aún es válido.
+    try {
+      await _apiService.unregisterFCMToken();
+      debugPrint("AuthProvider: FCM token unregistered from backend on logout.");
+    } catch (e) {
+      debugPrint("AuthProvider: Error unregistering FCM token on logout (ignoring error): $e");
+    }
+
     _isAuthenticated = false;
     _user = null;
     _userRoles = [];
     _userIsAdmin = false;
     _userPermissions = <String>{};
-    
-    // Optionally delete FCM token from backend on logout
-    if (_user != null && _user!.empleadoId != null) {
-      try {
-        await _apiService.updateFCMToken(""); // Send empty token to clear it
-        debugPrint("AuthProvider: FCM token cleared from backend on logout.");
-      } catch (e) {
-        debugPrint("AuthProvider: Error clearing FCM token on logout: $e");
-      }
-    }
     
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
