@@ -501,6 +501,16 @@ class ApiService {
   // --- Órdenes de Compra ---
   Future<List<OrdenCompra>> getOrdenes() => _fetchList('/ordenes-compra/', OrdenCompra.fromJson);
 
+  Future<OrdenCompra> createOrdenCompra(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post('/ordenes-compra/', data: data);
+      await logAction('CREATE: OrdenCompra', {'id': response.data['id'], 'solicitud_id': data['solicitud']});
+      return OrdenCompra.fromJson(response.data);
+    } on DioException catch (e) {
+      throw Exception('Error al crear la orden de compra: ${e.response?.data?['detail'] ?? e.message}');
+    }
+  }
+
   Future<OrdenCompra> recibirOrden(String id, Map<String, dynamic> data) async {
     try {
       final response = await _dio.post('/ordenes-compra/$id/recibir/', data: data);

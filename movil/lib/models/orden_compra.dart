@@ -23,8 +23,8 @@ class OrdenCompra {
       estado: json['estado'] ?? 'DESCONOCIDO',
       precioFinal: double.tryParse(json['precio_final'].toString()) ?? 0.0,
       fechaOrden: DateTime.parse(json['fecha_orden']),
-      proveedorNombre: json['proveedor_detail']?['nombre'] ?? 'N/A',
-      solicitudDescripcion: json['solicitud_detail']?['descripcion'] ?? 'N/A',
+      proveedorNombre: json['proveedor']?['nombre'] ?? 'N/A',
+      solicitudDescripcion: json['solicitud']?['descripcion'] ?? 'N/A',
     );
   }
 }

@@ -86,4 +86,12 @@ class ActivoFijoProvider with ChangeNotifier {
       return false;
     }
   }
+
+  ActivoFijo? findById(String id) {
+    try {
+      return _activos.firstWhere((activo) => activo.id == id);
+    } catch (e) {
+      return null;
+    }
+  }
 }

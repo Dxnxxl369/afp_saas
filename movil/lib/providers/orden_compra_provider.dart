@@ -29,6 +29,24 @@ class OrdenCompraProvider with ChangeNotifier {
     }
   }
 
+  Future<void> createOrdenCompra(Map<String, dynamic> data) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final nuevaOrden = await _apiService.createOrdenCompra(data);
+      _ordenes.insert(0, nuevaOrden);
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      throw Exception('Error al crear la orden de compra: $_error');
+    }
+  }
+
   Future<void> recibirOrden(String id, Map<String, dynamic> activoData) async {
     try {
       final updatedOrden = await _apiService.recibirOrden(id, activoData);

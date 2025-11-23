@@ -8,6 +8,7 @@ class SolicitudCompra {
   final DateTime fechaSolicitud;
   final String solicitanteNombre;
   final String departamentoNombre;
+  final String? ordenCompraId; // ID de la orden de compra si existe
 
   SolicitudCompra({
     required this.id,
@@ -17,19 +18,19 @@ class SolicitudCompra {
     required this.fechaSolicitud,
     required this.solicitanteNombre,
     required this.departamentoNombre,
+    this.ordenCompraId,
   });
 
   factory SolicitudCompra.fromJson(Map<String, dynamic> json) {
-    // El backend suele enviar detalles de las claves foráneas
-    // para no tener que hacer más peticiones.
     return SolicitudCompra(
       id: json['id'],
       descripcion: json['descripcion'] ?? 'Sin descripción',
       estado: json['estado'] ?? 'DESCONOCIDO',
       costoEstimado: double.tryParse(json['costo_estimado'].toString()) ?? 0.0,
       fechaSolicitud: DateTime.parse(json['fecha_solicitud']),
-      solicitanteNombre: json['solicitante_detail']?['nombre_completo'] ?? 'N/A',
-      departamentoNombre: json['departamento_detail']?['nombre'] ?? 'N/A',
+      solicitanteNombre: json['solicitante']?['first_name'] ?? 'N/A',
+      departamentoNombre: json['departamento']?['nombre'] ?? 'N/A',
+      ordenCompraId: json['orden_compra'], // Puede ser null
     );
   }
 }

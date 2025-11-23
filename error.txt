@@ -1,11 +1,26 @@
-E/flutter (15859): The status code of 400 has the following meaning: "Client error - the request contains bad syntax or cannot be fulfilled"
-E/flutter (15859): Read more about status codes at https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
-E/flutter (15859): In order to resolve this exception you typically have either to verify and fix your request code or you have to fix the server code.
-E/flutter (15859):
-E/flutter (15859): #0      ApiService.markAllNotificationsAsRead (package:movil/services/api_service.dart:136:7)    
-E/flutter (15859): <asynchronous suspension>
-E/flutter (15859): #1      NotificationProvider.markAllNotificationsAsRead (package:movil/providers/notification_provider.dart:70:7)
-E/flutter (15859): <asynchronous suspension>
-E/flutter (15859): #2      _HomeScreenState._showNotificationsSheet.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:movil/screens/home_screen.dart:457:33)
-E/flutter (15859): <asynchronous suspension>
-E/flutter (15859):
+PS C:\Activos Fijos\sprintespecial-con ia\movil> flutter build apk --debug
+Support for Android x86 targets will be removed in the next stable
+release after 3.27. See https://github.com/flutter/flutter/issues/157543
+for details.
+lib/screens/mantenimiento/mantenimiento_screen.dart:131:60: Error: Member not found: 'checkCircle'.
+                              icon: const Icon(LucideIcons.checkCircle), 
+                                                           ^^^^^^^^^^^   
+Target kernel_snapshot_program failed: Exception
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileFlutterBuildDebug'.
+> Process 'command 'C:\flutter\bin\flutter.bat'' finished with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 14s
+Running Gradle task 'assembleDebug'...                             15,4s 
+Gradle task assembleDebug failed with exit code 1
+PS C:\Activos Fijos\sprintespecial-con ia\movil> 

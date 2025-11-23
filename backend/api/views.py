@@ -592,6 +592,57 @@ class OrdenCompraViewSet(BaseTenantViewSet):
     serializer_class = OrdenCompraSerializer
     required_manage_permission = 'manage_orden_compra'
 
+    def perform_create(self, serializer):
+        """
+        Sobrescrito para guardar la orden y notificar al solicitante original.
+        """
+        # Guardar la orden de compra, asignando la empresa del usuario actual
+        orden = serializer.save(
+            empresa=self.request.user.empleado.empresa,
+            creado_por=self.request.user
+        )
+
+        # --- Lógica para Notificar al Solicitante Original ---
+        try:
+            solicitud_original = orden.solicitud
+            destinatario = solicitud_original.solicitante
+
+            # No notificar si el creador de la orden es el mismo que el solicitante
+            if destinatario == self.request.user:
+                return
+
+            mensaje = f"Se ha generado una orden de compra para tu solicitud: '{solicitud_original.descripcion[:35]}...'."
+            title_fcm = "Orden de Compra Generada"
+            url_destino = f'/app/ordenes-compra' # O una URL más específica si existe
+
+            # Crear la notificación web (para la campanita)
+            notif_obj = Notificacion.objects.create(
+                destinatario=destinatario,
+                mensaje=mensaje,
+                tipo='INFO',
+                url_destino=url_destino
+            )
+
+            # Enviar notificación push si el solicitante tiene un token FCM
+            empleado_destinatario = Empleado.objects.filter(usuario=destinatario).first()
+            if empleado_destinatario and empleado_destinatario.fcm_token:
+                fcm_data = {
+                    "id": str(notif_obj.id),
+                    "url_destino": url_destino,
+                    "tipo": notif_obj.tipo,
+                    "screen": "PurchaseOrderDetail", # Dato para deep linking en móvil
+                    "orden_id": str(orden.id)
+                }
+                send_fcm_notification(
+                    fcm_token=empleado_destinatario.fcm_token,
+                    title=title_fcm,
+                    body=mensaje,
+                    data=fcm_data
+                )
+        except Exception as e:
+            # La creación de la orden no debe fallar si las notificaciones fallan.
+            logger.error(f"Error al intentar notificar al solicitante sobre la nueva orden de compra {orden.id}: {e}")
+
     @action(detail=True, methods=['post'], url_path='enviar')
     def enviar(self, request, pk=None):
         if not check_permission(request, self, 'manage_orden_compra'):
@@ -688,6 +739,40 @@ class OrdenCompraViewSet(BaseTenantViewSet):
             # Marcar la orden como completada
             orden.estado = 'COMPLETADA'
             orden.save(update_fields=['estado'])
+
+            # --- [NUEVO] Notificar al solicitante original ---
+            try:
+                destinatario = solicitud.solicitante
+                if destinatario != request.user: # No notificar a la persona que realiza la acción
+                    mensaje = f"El activo para tu solicitud '{solicitud.descripcion[:30]}...' ha sido recibido y creado."
+                    title_fcm = "Activo Recibido"
+                    url_destino = f'/app/activos-fijos/{nuevo_activo.id}'
+
+                    notif_obj = Notificacion.objects.create(
+                        destinatario=destinatario,
+                        mensaje=mensaje,
+                        tipo='INFO',
+                        url_destino=url_destino
+                    )
+
+                    empleado_destinatario = Empleado.objects.filter(usuario=destinatario).first()
+                    if empleado_destinatario and empleado_destinatario.fcm_token:
+                        fcm_data = {
+                            "id": str(notif_obj.id),
+                            "url_destino": url_destino,
+                            "tipo": notif_obj.tipo,
+                            "screen": "ActivoDetail",
+                            "activo_id": str(nuevo_activo.id)
+                        }
+                        send_fcm_notification(
+                            fcm_token=empleado_destinatario.fcm_token,
+                            title=title_fcm,
+                            body=mensaje,
+                            data=fcm_data
+                        )
+            except Exception as e:
+                logger.error(f"Error al notificar la recepción de la orden {orden.id}: {e}")
+            # --- [FIN] ---
 
         serializer = ActivoFijoSerializer(nuevo_activo)
         return Response(serializer.data, status=status.HTTP_201_CREATED)

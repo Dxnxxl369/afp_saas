@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 
 import '../../providers/orden_compra_provider.dart';
 import '../../providers/auth_provider.dart';
+import 'create_orden_compra_screen.dart';
+import 'recibir_orden_screen.dart';
 
 class OrdenesScreen extends StatefulWidget {
   const OrdenesScreen({super.key});
@@ -18,24 +20,32 @@ class _OrdenesScreenState extends State<OrdenesScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<OrdenCompraProvider>().fetchOrdenes();
+      // Usar listen:false en initState
+      Provider.of<OrdenCompraProvider>(context, listen: false).fetchOrdenes();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
+    // Usar listen:false aquí si solo se necesita para el check de permiso inicial
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final canReceive = authProvider.hasPermission('receive_orden_compra');
+    final canManage = authProvider.hasPermission('manage_orden_compra');
 
     return Scaffold(
       body: Consumer<OrdenCompraProvider>(
         builder: (context, provider, child) {
-          if (provider.isLoading) {
+          if (provider.isLoading && provider.ordenes.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (provider.error != null) {
-            return Center(child: Text('Error: ${provider.error}'));
+          if (provider.error != null && provider.ordenes.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text('Error al cargar las órdenes: ${provider.error}'),
+              ),
+            );
           }
 
           if (provider.ordenes.isEmpty) {
@@ -92,7 +102,11 @@ class _OrdenesScreenState extends State<OrdenesScreen> {
                               alignment: Alignment.centerRight,
                               child: ElevatedButton(
                                 onPressed: () {
-                                  // TODO: Mostrar formulario para recibir activo
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => RecibirOrdenScreen(orden: orden),
+                                    ),
+                                  );
                                 },
                                 child: const Text('Recibir Activo'),
                               ),
@@ -107,7 +121,19 @@ class _OrdenesScreenState extends State<OrdenesScreen> {
           );
         },
       ),
-      // No hay FAB para crear órdenes directamente según el flujo
+      floatingActionButton: canManage
+          ? FloatingActionButton.extended(
+              icon: const Icon(Icons.add),
+              label: const Text('Crear Orden'),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const CreateOrdenCompraScreen(),
+                  ),
+                );
+              },
+            )
+          : null,
     );
   }
 
