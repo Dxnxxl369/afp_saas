@@ -1,4 +1,5 @@
 // lib/screens/activos/activos_screen.dart
+import 'dart:async'; // Para usar Timer
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -22,16 +23,34 @@ import '../../models/ubicacion.dart';
 import '../../models/proveedor.dart';
 
 class ActivosScreen extends StatefulWidget {
-  const ActivosScreen({super.key});
+  final String? highlightedAssetId;
+
+  const ActivosScreen({super.key, this.highlightedAssetId});
 
   @override
   State<ActivosScreen> createState() => _ActivosScreenState();
 }
 
 class _ActivosScreenState extends State<ActivosScreen> {
+  String? _highlightedId;
+  Timer? _highlightTimer;
+
   @override
   void initState() {
     super.initState();
+    
+    _highlightedId = widget.highlightedAssetId;
+
+    if (_highlightedId != null) {
+      _highlightTimer = Timer(const Duration(seconds: 3), () {
+        if (mounted) {
+          setState(() {
+            _highlightedId = null;
+          });
+        }
+      });
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ActivoFijoProvider>().fetchActivos();
       context.read<DepartamentoProvider>().fetchDepartamentos();
@@ -40,6 +59,12 @@ class _ActivosScreenState extends State<ActivosScreen> {
       context.read<UbicacionesProvider>().fetchUbicaciones();
       context.read<ProveedorProvider>().fetchProveedores();
     });
+  }
+
+  @override
+  void dispose() {
+    _highlightTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -86,9 +111,18 @@ class _ActivosScreenState extends State<ActivosScreen> {
               itemCount: activoProvider.activos.length,
               itemBuilder: (context, index) {
                 final activo = activoProvider.activos[index];
+                final isHighlighted = activo.id == _highlightedId;
+
                 return Card(
                   margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   clipBehavior: Clip.antiAlias,
+                  color: isHighlighted ? Theme.of(context).colorScheme.primary.withOpacity(0.2) : null,
+                  shape: isHighlighted 
+                    ? RoundedRectangleBorder(
+                        side: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1.5),
+                        borderRadius: BorderRadius.circular(12),
+                      )
+                    : null,
                   child: InkWell(
                     onTap: () => _showActivoDetailDialog(context, activo),
                     child: Padding(

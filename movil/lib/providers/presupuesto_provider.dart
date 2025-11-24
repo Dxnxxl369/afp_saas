@@ -80,13 +80,13 @@ class PresupuestoProvider with ChangeNotifier {
 
   // --- Methods for Partidas ---
 
-  Future<void> fetchPartidas(String periodoId) async {
+  Future<void> fetchPartidas(String periodoId, {String? departamentoId}) async {
     _isLoadingPartidas = true;
     _errorPartidas = null;
     notifyListeners();
 
     try {
-      _partidas = await _apiService.getPartidas(periodoId);
+      _partidas = await _apiService.getPartidas(periodoId, departamentoId: departamentoId);
     } catch (e) {
       _errorPartidas = e.toString();
     } finally {

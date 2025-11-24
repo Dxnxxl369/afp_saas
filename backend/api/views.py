@@ -433,6 +433,11 @@ class PartidaPresupuestariaViewSet(BaseTenantViewSet):
         if periodo_id:
             qs = qs.filter(periodo_id=periodo_id)
         
+        # --- NUEVO: Aplicar filtro por departamento_id ---
+        departamento_id = self.request.query_params.get('departamento_id')
+        if departamento_id:
+            qs = qs.filter(departamento_id=departamento_id)
+
         return qs.distinct() # Use distinct to avoid potential duplicates from joins
 
 class MovimientoPresupuestarioViewSet(BaseTenantViewSet):

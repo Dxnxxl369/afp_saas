@@ -440,7 +440,7 @@ class ApiService {
   }
 
   // --- Presupuestos: Partidas ---
-  Future<List<PartidaPresupuestaria>> getPartidas(String periodoId) => _fetchList('/partidas-presupuestarias/', PartidaPresupuestaria.fromJson, queryParameters: {'periodo_id': periodoId});
+  Future<List<PartidaPresupuestaria>> getPartidas(String periodoId, {String? departamentoId}) => _fetchList('/partidas-presupuestarias/', PartidaPresupuestaria.fromJson, queryParameters: {'periodo_id': periodoId, if (departamentoId != null) 'departamento_id': departamentoId});
   
   Future<PartidaPresupuestaria> createPartida(Map<String, dynamic> data) async {
     try {

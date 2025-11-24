@@ -2,6 +2,7 @@
 import 'package:flutter/foundation.dart';
 import '../services/api_service.dart';
 import '../models/orden_compra.dart';
+import '../models/activo_fijo.dart'; // <-- AÑADIR IMPORTACIÓN
 
 class OrdenCompraProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
